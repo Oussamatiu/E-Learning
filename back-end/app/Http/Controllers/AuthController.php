@@ -9,50 +9,75 @@ use App\Models\student;
 use App\Models\role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $request->validate([
+   public function register(Request $request)
+{
+    try {
+        // ✅ Validation
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id'
         ]);
+
+        // ✅ Transaction: حماية العمليات في DB
+        DB::beginTransaction();
+
         $verificationToken = Str::random(60);
+
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id' => $request->role_id,
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+            'role_id' => $validatedData['role_id'],
             'email_verification_token' => hash('sha256', $verificationToken),
         ]);
 
-        $role = role::find($request->role_id);
-       if($role == 'student'){
-         student::create([
-            "id" => $user->id,
-            "user_id" => $user->id
-         ]);
-       }
-        if($role == 'instructor'){
-         instructor::create([
-            "id" => $user->id,
-            "user_id" => $user->id
-         ]);
-       }
-         
+        $role = Role::find($validatedData['role_id']);
+        if ($role->title == 'student') {
+            Student::create([
+                "id" => $user->id,
+                "user_id" => $user->id
+            ]);
+        } elseif ($role->title == 'instructor') {
+            Instructor::create([
+                "id" => $user->id,
+                "user_id" => $user->id
+            ]);
+        }
+
+        // ✅ إرسال البريد الإلكتروني
         Mail::to($user->email)->send(new VerfyEmail($verificationToken, $user));
+
+        DB::commit();
 
         return response()->json([
             'message' => 'Registration successful. Please check your email to verify your account.',
+            'user' => $user
         ], 201);
 
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        // Validation errors
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
+
+    } catch (\Exception $e) {
+        DB::rollBack(); // إذا صار خطأ في DB أو mail
+        return response()->json([
+            'message' => 'Registration failed',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     public function login(Request $request)
     {

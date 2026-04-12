@@ -55,7 +55,7 @@ class CourseController extends Controller
         $course = Course::create([
             'title' => $request->title,
             'description' => $request->description,
-            'instructor_id' => $user->id,
+            'instructor_id' => $user->instructor->id,
             'price' => $request->price,
             'level' => $request->level,
             'status' => $request->status,

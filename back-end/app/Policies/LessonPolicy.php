@@ -45,7 +45,7 @@ class LessonPolicy
      */
     public function delete(User $user, lesson $lesson): bool
     {
-        return $user->role->title === 'instructor';
+        return $user->role->title === 'instructor' && $lesson->course?->instructor?->user_id === $user->id ;
     }
 
     /**

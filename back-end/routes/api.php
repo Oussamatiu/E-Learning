@@ -10,4 +10,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('check.api.token');
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::resource('/courses', CourseController::class)->middleware('check.api.token');
-Route::post('/courses/{courseId}/lessons', [LessonController::class, 'store']);
+Route::post('/courses/{courseId}/lessons', [LessonController::class, 'store'])->middleware('check.api.token');
+Route::delete('/courses/{courseId}/lessons/{lessonId}',[LessonController::class, 'destroy'])->middleware('check.api.token');
+Route::put('/courses/{courseId}/lessons/{lessonId}',[LessonController::class, 'update'])->middleware('check.api.token');
