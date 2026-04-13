@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchCourses, fetchCategories } from '../../services/Coursesapi';
 
 export const CourseCard = ({ id, title, category, img, instructor, price, rating, reviews, students, duration }) => {
   const navigate = useNavigate();
@@ -57,26 +58,40 @@ export const CourseCard = ({ id, title, category, img, instructor, price, rating
 export const Courses = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [courses, setCourses] = useState([]);
+  const [categories, setCategories] = useState(['All']);
+  const [loading, setLoading] = useState(true);
 
-  const courses = [
-    { id: 1, title: "Complete React Developer in 2024: Zero to Mastery", category: "Programming", rating: 4.8, reviews: "2,450", students: "12k", duration: "42h 30m", price: "$49.99", instructor: "Sarah Johnson", img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&q=80" },
-    { id: 2, title: "UI/UX Design Masterclass: Strategy, Tools & Practice", category: "Design", rating: 4.9, reviews: "1,820", students: "8k", duration: "28h 15m", price: "$39.99", instructor: "Michael Chen", img: "https://images.unsplash.com/photo-1586717791821-3f44a563dc4c?w=400&q=80" },
-    { id: 3, title: "Python for Data Science and Machine Learning", category: "Data Science", rating: 4.7, reviews: "3,100", students: "15k", duration: "56h 45m", price: "$54.99", instructor: "David Miller", img: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&q=80" },
-    { id: 4, title: "Digital Marketing Strategy: From Zero to Hero", category: "Marketing", rating: 4.6, reviews: "950", students: "5k", duration: "18h 20m", price: "$29.99", instructor: "Emily White", img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80" },
-    { id: 5, title: "Modern JavaScript: Building Scalable Web Apps", category: "Programming", rating: 4.8, reviews: "1,200", students: "7k", duration: "32h 10m", price: "$44.99", instructor: "Alex Rivera", img: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400&q=80" },
-    { id: 6, title: "Photography Masterclass: A Complete Guide", category: "Photography", rating: 4.9, reviews: "640", students: "3k", duration: "24h 50m", price: "$34.99", instructor: "Laura Smith", img: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=400&q=80" },
-    { id: 7, title: "Advanced SQL for Business Intelligence", category: "Data Science", rating: 4.7, reviews: "890", students: "4k", duration: "15h 40m", price: "$39.99", instructor: "James Wilson", img: "https://images.unsplash.com/photo-1551288049-bbbda5366991?w=400&q=80" },
-    { id: 8, title: "Financial Analysis & Investment Management", category: "Finance", rating: 4.8, reviews: "520", students: "2k", duration: "22h 15m", price: "$49.99", instructor: "Robert Brown", img: "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?w=400&q=80" },
-  ];
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await fetchCategories();
+        setCategories(['All', ...cats.map(cat => cat.name)]);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
 
-  const categories = ['All', 'Programming', 'Design', 'Data Science', 'Marketing', 'Finance', 'Photography'];
-
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = activeFilter === 'All' || course.category === activeFilter;
-    return matchesSearch && matchesFilter;
-  });
+  useEffect(() => {
+    const loadCourses = async () => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (searchQuery) params.search = searchQuery;
+        if (activeFilter !== 'All') params.category = activeFilter;
+        const data = await fetchCourses(params);
+        setCourses(data);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCourses();
+  }, [searchQuery, activeFilter]);
 
   return (
     <section className="py-24 px-6 bg-[#F8FAFC]">
@@ -125,10 +140,12 @@ export const Courses = () => {
            ))}
         </div>
         
-        {filteredCourses.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-20">Loading courses...</div>
+        ) : courses.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
+            {courses.map((course) => (
+              <CourseCard key={course.id} id={course.id} title={course.title} category={course.category?.name} img={course.thumbnail} instructor={course.instructor?.name} price={`$${course.price}`} rating={course.rating || 0} reviews={0} students={course.students_count || 0} duration={course.duration || 'N/A'} />
             ))}
           </div>
         ) : (

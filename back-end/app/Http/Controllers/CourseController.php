@@ -15,11 +15,33 @@ class CourseController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $courses = Course::with('instructor', 'category')->get();
-        return response()->json(CourseResource::collection($courses), 200);
+        try {
+            $query = Course::with('instructor', 'category');
 
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where('title', 'like', "%{$search}%")
+                      ->orWhereHas('instructor.user', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+            }
+
+            if ($request->has('category')) {
+                $query->whereHas('category', function($q) use ($request) {
+                    $q->where('name', $request->category);
+                });
+            }
+
+            $courses = $query->get();
+            return response()->json(CourseResource::collection($courses), 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Failed to fetch courses",
+                "error" => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -36,36 +58,53 @@ class CourseController extends Controller
      */
     public function store(Request $request)
     {
-        $token = $request->bearerToken();
-        $apiToken = ApiToken::where('token', hash('sha256',$token))->first();
-        $user = User::find($apiToken->user_id);
-        Auth::login($user);
-        $this->authorize('create', Course::class);
+        try {
+            $token = $request->bearerToken();
+            $apiToken = ApiToken::where('token', hash('sha256',$token))->first();
+            $user = User::find($apiToken->user_id);
+            Auth::login($user);
+            $this->authorize('create', Course::class);
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'nullable|numeric',
-            'level' => 'nullable|string',
-            'status' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id',
-        ]);
-        
-       
-        $course = Course::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'instructor_id' => $user->instructor->id,
-            'price' => $request->price,
-            'level' => $request->level,
-            'status' => $request->status,
-            'category_id' => $request->category_id,
-        ]);
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'price' => 'nullable|numeric',
+                'level' => 'nullable|string',
+                'status' => 'nullable|string',
+                'category_id' => 'required|exists:categories,id',
+                'image' => 'nullable|string',
+                'duration' => 'nullable|integer',
+                'students_count' => 'nullable|integer',
+                'rating' => 'nullable|numeric|min:0|max:5',
+                'thumbnail' => 'nullable|string',
+            ]);
+            
+           
+            $course = Course::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'instructor_id' => $user->instructor->id,
+                'price' => $request->price,
+                'level' => $request->level,
+                'status' => $request->status,
+                'category_id' => $request->category_id,
+                'image' => $request->image,
+                'duration' => $request->duration,
+                'students_count' => $request->students_count,
+                'rating' => $request->rating,
+                'thumbnail' => $request->thumbnail,
+            ]);
 
-        return response()->json([
-            "message" => "Course created successfully",
-            "course" => new CourseResource($course)
-        ], 201);
+            return response()->json([
+                "message" => "Course created successfully",
+                "course" => new CourseResource($course)
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Failed to create course",
+                "error" => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -89,28 +128,40 @@ class CourseController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $token = $request->bearerToken();
-        $apiToken = ApiToken::where('token', hash('sha256',$token))->first();
-        $user = User::find($apiToken->user_id);
-        Auth::login($user);
-        $course = Course::findOrFail($id);
-        $this->authorize('update', $course);
+        try {
+            $token = $request->bearerToken();
+            $apiToken = ApiToken::where('token', hash('sha256',$token))->first();
+            $user = User::find($apiToken->user_id);
+            Auth::login($user);
+            $course = Course::findOrFail($id);
+            $this->authorize('update', $course);
 
-        $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string',
-            'price' => 'nullable|numeric',
-            'level' => 'nullable|string',
-            'status' => 'nullable|string',
-            'category_id' => 'sometimes|required|exists:categories,id',
-        ]);
+            $request->validate([
+                'title' => 'sometimes|required|string|max:255',
+                'description' => 'sometimes|required|string',
+                'price' => 'nullable|numeric',
+                'level' => 'nullable|string',
+                'status' => 'nullable|string',
+                'category_id' => 'sometimes|required|exists:categories,id',
+                'image' => 'nullable|string',
+                'duration' => 'nullable|integer',
+                'students_count' => 'nullable|integer',
+                'rating' => 'nullable|numeric|min:0|max:5',
+                'thumbnail' => 'nullable|string',
+            ]);
 
-        $course->update($request->only(['title', 'description', 'price', 'level', 'status', 'category_id']));
+            $course->update($request->only(['title', 'description', 'price', 'level', 'status', 'category_id', 'image', 'duration', 'students_count', 'rating', 'thumbnail']));
 
-        return response()->json([
-            "message" => "Course updated successfully",
-            "course" => new CourseResource($course)
-        ], 200);
+            return response()->json([
+                "message" => "Course updated successfully",
+                "course" => new CourseResource($course)
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Failed to update course",
+                "error" => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -118,17 +169,24 @@ class CourseController extends Controller
      */
     public function destroy(Request $request, string $id)
     {
-        $token = $request->bearerToken();
-        $apiToken = ApiToken::where('token', hash('sha256',$token))->first();
-        $user = User::find($apiToken->user_id);
-        Auth::login($user);
-        $course = Course::findOrFail($id);
-        $this->authorize('delete', $course);
+        try {
+            $token = $request->bearerToken();
+            $apiToken = ApiToken::where('token', hash('sha256',$token))->first();
+            $user = User::find($apiToken->user_id);
+            Auth::login($user);
+            $course = Course::findOrFail($id);
+            $this->authorize('delete', $course);
 
-        $course->delete();
+            $course->delete();
 
-        return response()->json([
-            "message" => "Course deleted successfully"
-        ], 200);
+            return response()->json([
+                "message" => "Course deleted successfully"
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Failed to delete course",
+                "error" => $e->getMessage()
+            ], 500);
+        }
     }
 }

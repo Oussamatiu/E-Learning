@@ -19,6 +19,9 @@ return new class extends Migration
             $table->decimal('price', 8, 2);
             $table->string('level');
             $table->string('status');
+            $table->integer('duration');
+            $table->integer('students_count')->default(0);
+            $table->integer('rating')->default(0);
             $table->string('thumbnail')->nullable();
             $table->foreignId('instructor_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();

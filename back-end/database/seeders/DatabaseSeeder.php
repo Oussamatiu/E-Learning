@@ -21,5 +21,7 @@ class DatabaseSeeder extends Seeder
         foreach ($roles as $roleName) {
             role::create(['title' => $roleName]);
         }
+
+        $this->call(CategorieSeeder::class);
     }
 }

@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import CourseDetails from './pages/CourseDetails'
 import Categories from './pages/Categories'
 import Courses from './pages/Courses'
+import BecomeInstructor from './pages/BecomeInstructor'
 import { Main } from './layouts/Main'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Login from './pages/auth/Login'
@@ -22,6 +23,7 @@ function App() {
         
         <Route path="/login" element={<Login />} /> 
         <Route path="/register" element={<Register />} />
+        <Route path="/become-instructor" element={<Main><BecomeInstructor /></Main>}  />
        
         <Route path="/" element={<Main><Home /></Main>}  />
         <Route path="/course/:id" element={<Main><CourseDetails /></Main>}  />

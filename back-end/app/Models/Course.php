@@ -14,7 +14,11 @@ class Course extends Model
             'status',
             'thumbnail',
             'instructor_id',
-            'category_id'
+            'category_id',
+            'image',
+            'duration',
+            'students_count',
+            'rating'
         ];
 
     public function students()
