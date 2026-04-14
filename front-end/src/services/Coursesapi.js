@@ -41,6 +41,15 @@ export const fetchCourseById = async (id, signal) => {
   return request(`/api/courses/${id}`, {}, signal);
 };
 
+export const fetchInstructorCourses = async (token, signal) => {
+  const data = await request('/api/instructor/courses', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }, signal);
+  return Array.isArray(data) ? data : data.data ?? [];
+};
+
 export const fetchCategories = async (signal) => {
   const data = await request('/api/categories', {}, signal);
   return Array.isArray(data) ? data : data.data ?? [];

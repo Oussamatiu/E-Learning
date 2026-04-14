@@ -12,6 +12,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('check.api
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::get('/courses', [CourseController::class, 'index']);
 Route::get('/categories', [CategorieController::class, 'index']);
+Route::get('/instructor/courses', [CourseController::class, 'instructorCourses'])->middleware('check.api.token');
 Route::resource('/courses', CourseController::class)->middleware('check.api.token')->except(['index']);
 Route::post('/courses/{courseId}/lessons', [LessonController::class, 'store'])->middleware('check.api.token');
 Route::delete('/courses/{courseId}/lessons/{lessonId}',[LessonController::class, 'destroy'])->middleware('check.api.token');

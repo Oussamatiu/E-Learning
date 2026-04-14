@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { CourseCard } from '../sections/home/Courses';
 import { fetchCourses, fetchCategories } from '../services/Coursesapi';
 
@@ -13,7 +13,7 @@ const Courses = () => {
   const [categories, setCategories] = useState(['All']);
   const [loading, setLoading] = useState(true);
 
-  const prices = ['All', 'Free', 'Paid', 'On Sale'];
+  const prices = ['All', 'Free', 'Paid'];
   const ratings = ['All', '4.5 & up', '4.0 & up', '3.5 & up'];
 
   useEffect(() => {
@@ -50,8 +50,7 @@ const Courses = () => {
   const filteredCourses = courses.filter(course => {
     const matchesPrice = activePrice === 'All' ||
       (activePrice === 'Free' && course.price == 0) ||
-      (activePrice === 'Paid' && course.price > 0) ||
-      (activePrice === 'On Sale' && course.price > 0); // Assuming on sale if price > 0, adjust logic as needed
+      (activePrice === 'Paid' && course.price > 0);
     const matchesRating = activeRating === 'All' ||
       (activeRating === '4.5 & up' && course.rating >= 4.5) ||
       (activeRating === '4.0 & up' && course.rating >= 4.0) ||
@@ -60,140 +59,149 @@ const Courses = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Page Header - Professional Dark Gradient */}
-      <section className="bg-gradient-to-b from-[#1A1F5E] to-[#161a50] pt-24 pb-32 px-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/4"></div>
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FF6636]/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/4"></div>
+    <div className="min-h-screen bg-white">
+    
 
-        <div className="max-w-7xl mx-auto relative z-10 text-center">
-          <span className="text-[#FF6636] font-semibold tracking-[0.3em] text-xs uppercase mb-6 block animate-fade-in">CATALOGUE</span>
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
-            Advanced <span className="text-[#FF6636]">Skills</span> Hub
-          </h1>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto font-normal">
-            Explore our curated selection of professional courses designed to help you master new skills and advance your career.
-          </p>
+      {/* Page Header */}
+      <section className="py-8 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Browse all courses</h1>
+          <p className="text-gray-600 text-sm">Find the perfect course to upgrade your skills</p>
         </div>
       </section>
 
       {/* Main Content Area */}
-      <section className="py-24 px-6 relative z-20">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-4 gap-12">
-          
-          {/* Sidebar Filters - Pro Layout */}
-          <div className="lg:col-span-1 space-y-8">
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl shadow-slate-200/40 sticky top-28">
-              <div className="space-y-10">
-                {/* Search Bar in Sidebar or Main content? User said "main content" */}
-                {/* Let's put it at the top of the course grid area for maximum visibility */}
-                
+      <section className="py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col lg:flex-row gap-8">
+
+            {/* Sidebar Filters */}
+            <div className="lg:w-64 flex-shrink-0">
+              <div className="sticky top-20 space-y-6">
                 {/* Categories */}
                 <div>
-                  <h3 className="text-sm font-semibold text-[#1A1F5E] mb-6 uppercase tracking-widest border-l-4 border-[#FF6636] pl-4">Category</h3>
-                  <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Category</h3>
+                  <div className="space-y-2">
                     {categories.map(cat => (
-                      <button 
-                        key={cat} 
-                        onClick={() => setActiveCategory(cat)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-all flex justify-between items-center group ${activeCategory === cat ? 'bg-[#FF6636] text-white shadow-lg shadow-[#FF6636]/20' : 'text-slate-500 hover:bg-slate-50'}`}
-                      >
-                        {cat}
-                        <span className={`text-[10px] font-semibold bg-white/20 px-2 py-0.5 rounded ${activeCategory === cat ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 text-slate-400'}`}>12</span>
-                      </button>
+                      <label key={cat} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="category"
+                          checked={activeCategory === cat}
+                          onChange={() => setActiveCategory(cat)}
+                          className="w-4 h-4 text-[#592b98] focus:ring-[#592b98]"
+                        />
+                        <span className="text-sm text-gray-600">{cat}</span>
+                      </label>
                     ))}
                   </div>
                 </div>
 
                 {/* Price */}
                 <div>
-                  <h3 className="text-sm font-semibold text-[#1A1F5E] mb-6 uppercase tracking-widest border-l-4 border-[#FF6636] pl-4">Price</h3>
-                  <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Price</h3>
+                  <div className="space-y-2">
                     {prices.map(price => (
-                      <button 
-                        key={price} 
-                        onClick={() => setActivePrice(price)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activePrice === price ? 'bg-[#FF6636] text-white shadow-lg shadow-[#FF6636]/20' : 'text-slate-500 hover:bg-slate-50'}`}
-                      >
-                        {price}
-                      </button>
+                      <label key={price} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="price"
+                          checked={activePrice === price}
+                          onChange={() => setActivePrice(price)}
+                          className="w-4 h-4 text-[#592b98] focus:ring-[#592b98]"
+                        />
+                        <span className="text-sm text-gray-600">{price}</span>
+                      </label>
                     ))}
                   </div>
                 </div>
 
                 {/* Rating */}
                 <div>
-                  <h3 className="text-sm font-semibold text-[#1A1F5E] mb-6 uppercase tracking-widest border-l-4 border-[#FF6636] pl-4">Ratings</h3>
-                  <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Rating</h3>
+                  <div className="space-y-2">
                     {ratings.map(rating => (
-                      <button 
-                        key={rating} 
-                        onClick={() => setActiveRating(rating)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-all flex items-center gap-3 ${activeRating === rating ? 'bg-[#FF6636] text-white shadow-lg shadow-[#FF6636]/20' : 'text-slate-500 hover:bg-slate-50'}`}
-                      >
-                        {rating}
-                      </button>
+                      <label key={rating} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="rating"
+                          checked={activeRating === rating}
+                          onChange={() => setActiveRating(rating)}
+                          className="w-4 h-4 text-[#592b98] focus:ring-[#592b98]"
+                        />
+                        <span className="text-sm text-gray-600">{rating}</span>
+                      </label>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Course Grid Area */}
-          <div className="lg:col-span-3">
-            {/* New Search Bar - Main Content Area */}
-            <div className="mb-12">
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#FF6636] transition-colors">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-                <input 
-                  type="text" 
-                  placeholder="Search for courses, skills, or instructors..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white border-2 border-slate-100 pl-16 pr-32 py-5 rounded-2xl focus:outline-none focus:ring-4 focus:ring-[#FF6636]/10 focus:border-[#FF6636] transition-all shadow-xl shadow-slate-200/40 text-[#1A1F5E] font-semibold text-lg placeholder:text-slate-400"
-                />
-                <div className="absolute right-3 top-3 bottom-3 flex items-center">
-                  <button className="bg-[#1A1F5E] text-white h-full px-8 rounded-xl font-semibold hover:bg-[#FF6636] transition-all shadow-lg active:scale-95">
-                    Search
-                  </button>
+            {/* Course Grid Area */}
+            <div className="flex-1">
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search courses"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-gray-300 rounded-md py-3 px-4 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent"
+                  />
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                 </div>
               </div>
+
+              {/* Results Info */}
+              <div className="flex justify-between items-center mb-6">
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">{filteredCourses.length}</span> courses found
+                </p>
+                <select className="text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#592b98]">
+                  <option>Most Popular</option>
+                  <option>Highest Rated</option>
+                  <option>Price: Low to High</option>
+                  <option>Price: High to Low</option>
+                </select>
+              </div>
+
+              {/* Course Grid */}
+              {loading ? (
+                <div className="text-center py-20 text-gray-500">Loading courses...</div>
+              ) : filteredCourses.length > 0 ? (
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {filteredCourses.map(course => (
+                    <CourseCard
+                      key={course.id}
+                      id={course.id}
+                      title={course.title}
+                      category={course.category?.name}
+                      img={course.thumbnail}
+                      instructor={course.instructor?.name}
+                      price={`$${course.price}`}
+                      rating={course.rating || 0}
+                      reviews={course.reviews_count || 0}
+                      students={course.students_count || 0}
+                      duration={course.duration || 'N/A'}
+                      isBestseller={course.is_bestseller || false}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-12 text-center border border-gray-200">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No results found</h3>
+                  <p className="text-gray-500 text-sm">Try adjusting your search or filters to find what you're looking for.</p>
+                </div>
+              )}
             </div>
-
-            <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-              <p className="text-slate-400 text-sm font-semibold tracking-widest uppercase">
-                <span className="text-[#1A1F5E]">{filteredCourses.length} courses</span> found in <span className="text-[#FF6636]">{activeCategory}</span>
-              </p>
-              <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-gray-100 shadow-sm">
-                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Sort:</span>
-                 <select className="bg-transparent text-sm font-semibold text-[#1A1F5E] outline-none cursor-pointer">
-                    <option>Most Popular</option>
-                    <option>Newest</option>
-                    <option>Price: Low-High</option>
-                 </select>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="text-center py-20">Loading courses...</div>
-            ) : filteredCourses.length > 0 ? (
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
-                {filteredCourses.map(course => (
-                  <CourseCard key={course.id} id={course.id} title={course.title} category={course.category?.name} img={course.thumbnail} instructor={course.instructor?.name} price={`$${course.price}`} rating={course.rating || 0} reviews={0} students={course.students_count || 0} duration={course.duration || 'N/A'} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-[40px] p-20 text-center border border-dashed border-slate-200">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
-                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-                <h3 className="text-2xl font-bold text-[#1A1F5E] mb-2">No matches found</h3>
-                <p className="text-slate-400 font-normal">Try different keywords or filters.</p>
-              </div>
-            )}
           </div>
         </div>
       </section>

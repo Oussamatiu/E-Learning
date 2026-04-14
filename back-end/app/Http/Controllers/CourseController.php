@@ -45,6 +45,42 @@ class CourseController extends Controller
     }
 
     /**
+     * Display instructor-owned courses.
+     */
+    public function instructorCourses(Request $request)
+    {
+        try {
+            $token = $request->bearerToken();
+            $apiToken = ApiToken::where('token', hash('sha256', $token))->first();
+            $user = User::find($apiToken->user_id);
+
+            if (!$user || $user->role?->title !== 'instructor') {
+                return response()->json([
+                    'message' => 'Forbidden: instructor access required'
+                ], 403);
+            }
+
+            $instructor = $user->instructor;
+            if (!$instructor) {
+                return response()->json([
+                    'message' => 'Instructor profile not found'
+                ], 404);
+            }
+
+            $courses = Course::with('instructor', 'category')
+                ->where('instructor_id', $instructor->id)
+                ->get();
+
+            return response()->json(CourseResource::collection($courses), 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to fetch instructor courses',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()

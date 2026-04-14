@@ -1,68 +1,85 @@
+import { Link } from 'react-router-dom';
+
 const Footer = () => (
-  <footer className="bg-[#1A1F5E] pt-24 pb-12 text-white border-t border-white/10">
-    <div className="w-[80%] lg:w-[80%] mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-16 mb-20">
-        <div className="lg:col-span-2">
-           <div className="text-3xl font-semibold flex items-center gap-2 mb-8 group cursor-pointer">
-             <div className="w-10 h-10 bg-[#FF6636] rounded-xl flex items-center justify-center text-white italic text-xl font-bold group-hover:scale-110 transition-transform">L</div>
-             <span className="text-white tracking-tight">LearnTrack</span>
-           </div>
-           <p className="text-white/50 mb-10 max-w-sm text-[15px] leading-relaxed font-normal">
-             Learn anywhere, and anytime. The platform for all students who are interested in our professional learning journey.
-           </p>
-           <div className="flex gap-4">
-             {['fb', 'tw', 'ig', 'li'].map(social => (
-               <a key={social} href="#" className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center hover:bg-[#FF6636] transition-all duration-300 border border-white/10 hover:border-transparent group">
-                 <div className="w-5 h-5 bg-white/20 group-hover:bg-white rounded-sm transition-colors" />
-               </a>
-             ))}
-           </div>
+  <footer className="bg-gray-50 border-t border-gray-200">
+    <div className="max-w-7xl mx-auto px-4 py-12">
+      {/* Main Footer Links */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
+        {/* Logo */}
+        <div className="col-span-2 lg:col-span-1">
+          <Link to="/" className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-[#592b98] rounded flex items-center justify-center text-white font-bold text-base">L</div>
+            <span className="text-lg font-bold text-gray-900">LearnTrack</span>
+          </Link>
         </div>
-        
+
+        {/* LearnTrack */}
         <div>
-          <h4 className="font-semibold text-lg mb-8 text-white uppercase tracking-widest text-xs">Platform</h4>
-          <ul className="space-y-4 text-white/50 text-[15px] font-normal">
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Browse Courses</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Categories</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Become Instructor</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Pricing</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Mentors</li>
+          <h4 className="font-semibold text-gray-900 mb-4 text-sm">LearnTrack</h4>
+          <ul className="space-y-3 text-sm text-gray-600">
+            <li><a href="#" className="hover:underline">About us</a></li>
+            <li><a href="#" className="hover:underline">Careers</a></li>
+            <li><a href="#" className="hover:underline">Blog</a></li>
+            <li><a href="#" className="hover:underline">Investors</a></li>
           </ul>
         </div>
-        
+
+        {/* Discover */}
         <div>
-          <h4 className="font-semibold text-lg mb-8 text-white uppercase tracking-widest text-xs">Support</h4>
-          <ul className="space-y-4 text-white/50 text-[15px] font-normal">
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Help Center</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Community</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">FAQs</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Contact Us</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Status Page</li>
+          <h4 className="font-semibold text-gray-900 mb-4 text-sm">Discover</h4>
+          <ul className="space-y-3 text-sm text-gray-600">
+            <li><a href="#" className="hover:underline">Browse Courses</a></li>
+            <li><a href="#" className="hover:underline">Categories</a></li>
+            <li><a href="#" className="hover:underline">Mentors</a></li>
+            <li><a href="#" className="hover:underline">Learning Plans</a></li>
           </ul>
         </div>
-        
+
+        {/* Community */}
         <div>
-          <h4 className="font-semibold text-lg mb-8 text-white uppercase tracking-widest text-xs">More</h4>
-          <ul className="space-y-4 text-white/50 text-[15px] font-normal">
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Terms of Service</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Privacy Policy</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Cookie Policy</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Affiliates</li>
-            <li className="hover:text-[#FF6636] transition-colors cursor-pointer">Partnerships</li>
+          <h4 className="font-semibold text-gray-900 mb-4 text-sm">Community</h4>
+          <ul className="space-y-3 text-sm text-gray-600">
+            <li><a href="#" className="hover:underline">Learners</a></li>
+            <li><a href="#" className="hover:underline">Instructors</a></li>
+            <li><a href="#" className="hover:underline">Developers</a></li>
+            <li><a href="#" className="hover:underline">Partners</a></li>
+          </ul>
+        </div>
+
+        {/* More */}
+        <div>
+          <h4 className="font-semibold text-gray-900 mb-4 text-sm">More</h4>
+          <ul className="space-y-3 text-sm text-gray-600">
+            <li><a href="#" className="hover:underline">Teach on LearnTrack</a></li>
+            <li><a href="#" className="hover:underline">Get the app</a></li>
+            <li><a href="#" className="hover:underline">Help Center</a></li>
+            <li><a href="#" className="hover:underline">Contact us</a></li>
           </ul>
         </div>
       </div>
-      
-      <div className="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-white/5 text-white/30 text-sm font-normal">
-        <p>© 2026 LearnTrack. All rights reserved.</p>
-        <div className="flex items-center gap-8 mt-4 md:mt-0">
-          <span className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-[#592b98] rounded flex items-center justify-center text-white font-bold text-xs">L</div>
+          <span className="text-sm text-gray-500">© 2026 LearnTrack, Inc.</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+          <a href="#" className="hover:underline">Terms</a>
+          <a href="#" className="hover:underline">Privacy</a>
+          <a href="#" className="hover:underline">Cookie Settings</a>
+          <a href="#" className="hover:underline">Sitemap</a>
+          <a href="#" className="hover:underline">Accessibility</a>
+        </div>
+        <div className="flex items-center gap-4">
+          <button className="text-sm text-gray-600 hover:text-gray-900 font-medium flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
             English
-          </span>
+          </button>
         </div>
       </div>
     </div>
   </footer>
 );
+
 export default Footer;

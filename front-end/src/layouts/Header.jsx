@@ -6,9 +6,9 @@ const Header = () => {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Check localStorage for user data whenever the component mounts or the location changes
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -20,7 +20,7 @@ const Header = () => {
     } else {
       setUser(null);
     }
-  }, [location.pathname]); // Re-check when navigating
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -30,100 +30,134 @@ const Header = () => {
     navigate('/login');
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/courses?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
-    <nav className="h-20 border-b bg-white/80 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
-      <div className="w-[80%] lg:w-[85%] mx-auto h-full flex items-center justify-between">
-        <div className="flex items-center gap-12">
-          <Link to="/" className="text-2xl font-bold flex items-center gap-2 group transition-transform hover:scale-105 active:scale-95">
-            <div className="w-10 h-10 bg-[#FF6636] rounded-xl flex items-center justify-center text-white italic text-xl font-bold shadow-lg shadow-[#FF6636]/20 group-hover:rotate-12 transition-transform duration-500">L</div>
-            <span className="text-[#1A1F5E] tracking-tighter">LearnTrack</span>
-          </Link>
-          <div className="hidden lg:flex gap-8 text-[15px] font-semibold text-slate-500">
-            <Link to="/courses" className="hover:text-[#FF6636] transition-colors relative group py-2">
-              Browse Courses
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FF6636] transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-            <Link to="/categories" className="hover:text-[#FF6636] transition-colors relative group py-2">
-              Categories
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FF6636] transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-            <Link to="/mentors" className="hover:text-[#FF6636] transition-colors relative group py-2">
-              Mentors
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FF6636] transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-            <Link to="/become-instructor" className="hover:text-[#FF6636] transition-colors relative group py-2">
-              Become an Instructor
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FF6636] transition-all duration-300 group-hover:w-full"></span>
-            </Link>
+    <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      {/* Top Bar */}
+      <div className="border-b border-gray-100 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center text-sm">
+          <div className="flex items-center gap-4">
+            <Link to="/courses" className="text-gray-600 hover:text-[#592b98] font-medium">Explore Careers</Link>
+            <Link to="/mentors" className="text-gray-600 hover:text-[#592b98] font-medium hidden sm:block">Mentorship</Link>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link to="/become-instructor" className="text-gray-600 hover:text-[#592b98] font-medium">Teach on LearnTrack</Link>
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-6">
-          {/* Shopping Cart Button */}
-          <button className="relative p-2.5 hover:bg-slate-100 rounded-xl transition-all duration-300 group">
-            <svg className="w-6 h-6 text-[#1A1F5E] group-hover:text-[#FF6636] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6636] text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
-          </button>
+      {/* Main Header */}
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center gap-6 py-4">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-9 h-9 bg-[#592b98] rounded flex items-center justify-center text-white font-bold text-lg">L</div>
+            <span className="text-xl font-bold text-gray-900 hidden sm:block">LearnTrack</span>
+          </Link>
 
-          {user ? (
+          {/* Search Bar - Udemy Style */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-2xl hidden md:block">
             <div className="relative">
-              <button 
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-2xl transition-all duration-300"
-              >
-                <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-[#FF6636]/20">
-                  <img src={user.avatar || "https://i.pravatar.cc/150?u=user"} alt={user.name} className="w-full h-full object-cover" />
-                </div>
-                <div className="text-left hidden md:block">
-                  <span className="block text-sm font-bold text-[#1A1F5E] leading-none mb-1">{user.name}</span>
-                  <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{user.role || 'Student'}</span>
-                </div>
-                <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for anything"
+                className="w-full bg-gray-100 border border-gray-300 rounded-md py-2.5 px-4 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <button type="submit" className="absolute right-0 top-0 bottom-0 bg-[#592b98] text-white px-6 rounded-r-md text-sm font-medium hover:bg-[#3e1f6b] transition-colors">
+                Search
               </button>
+            </div>
+          </form>
 
-              {/* Dropdown Menu */}
-              {showDropdown && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-10" 
-                    onClick={() => setShowDropdown(false)}
-                  ></div>
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-slate-200 border border-slate-100 py-3 z-20 animate-fade-in origin-top-right">
-                    <div className="px-4 py-3 border-b border-slate-50 mb-2">
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Account</p>
-                      <p className="text-sm font-bold text-[#1A1F5E] truncate">{user.name}</p>
-                    </div>
-                    
-                    <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:text-[#FF6636] hover:bg-orange-50 transition-all">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                      Profile Settings
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:text-[#FF6636] hover:bg-orange-50 transition-all">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                      My Courses
-                    </button>
-                    <div className="h-px bg-slate-50 my-2"></div>
-                    <button 
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                      Log Out
-                    </button>
+          {/* Navigation */}
+          <div className="hidden lg:flex items-center gap-6">
+            <Link to="/courses" className="text-gray-700 hover:text-[#592b98] font-medium text-sm">Browse Courses</Link>
+            <Link to="/categories" className="text-gray-700 hover:text-[#592b98] font-medium text-sm">Categories</Link>
+          </div>
+
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-3 ml-auto">
+            {/* Search for mobile */}
+            <button className="md:hidden p-2 hover:bg-gray-100 rounded-full">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+
+            {/* Cart */}
+            <button className="relative p-2 hover:bg-gray-100 rounded-full">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#592b98] text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
+            </button>
+
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-full transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
+                    <img src={user.avatar || "https://i.pravatar.cc/150?u=user"} alt={user.name} className="w-full h-full object-cover" />
                   </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-6">
-              <button onClick={() => navigate('/login')} className="text-[15px] font-bold text-[#1A1F5E] hover:text-[#FF6636] transition-colors">Log in</button>
-              <button onClick={() => navigate('/register')} className="bg-[#FF6636] text-white text-[15px] font-bold px-8 py-3.5 rounded-2xl hover:bg-[#e85a2c] transition-all shadow-xl shadow-[#FF6636]/20 active:scale-95">Sign Up Now</button>
-            </div>
-          )}
+                </button>
+
+                {showDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowDropdown(false)}></div>
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-20">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                        <p className="text-xs text-gray-500">{user.role || 'Student'}</p>
+                      </div>
+                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Profile</button>
+                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">My courses</button>
+                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Account settings</button>
+                      {(user.role_id === 3 || user.role === 'instructor' || user.role?.title === 'instructor') && (
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            navigate('/instructor/dashboard');
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-[#592b98] hover:bg-gray-50"
+                        >
+                          Instructor dashboard
+                        </button>
+                      )}
+                      <div className="border-t border-gray-100 my-2"></div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        Log out
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button onClick={() => navigate('/login')} className="text-gray-700 hover:text-[#592b98] font-medium text-sm px-4 py-2">
+                  Log in
+                </button>
+                <button onClick={() => navigate('/register')} className="bg-[#592b98] text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-[#3e1f6b] transition-colors">
+                  Sign up
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>

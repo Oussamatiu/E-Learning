@@ -2,65 +2,69 @@ import React from 'react';
 
 const SecureLoginSection = () => {
   return (
-    <section className="py-24 px-6 bg-white">
-      <div className="w-[90%] lg:w-[85%] mx-auto">
-        <div className="text-center mb-16">
-          <span className="text-[#FF6636] font-semibold tracking-[0.2em] text-xs uppercase mb-4 block">STUDENT SECURITY</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#1A1F5E] mb-4">Secure Device Login Protection</h2>
-          <p className="text-slate-500 max-w-2xl mx-auto text-lg">Protect your courses with our advanced multi-device login system. Each student can only access their account from up to 2 devices simultaneously.</p>
-        </div>
+    <section className="py-16 px-4 bg-gray-50 border-b border-gray-200">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Secure device login protection
+            </h2>
+            <p className="text-gray-600 mb-8 max-w-md">
+              Keep your course community safe with smart device controls, authentication checks, and instant alerts for suspicious logins.
+            </p>
 
-        <div className="grid md:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-2xl border border-gray-100">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#FF6636]/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-[#FF6636]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m7.5-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="w-12 h-12 bg-[#592b98]/10 rounded flex items-center justify-center mb-4 text-[#592b98]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#1A1F5E] mb-2">2-Device Limit</h3>
-                  <p className="text-slate-500">Each student account can be active on maximum 2 devices at the same time, preventing account sharing.</p>
-                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">2-Device Limit</h3>
+                <p className="text-gray-600 text-sm">Prevent account sharing by limiting access to two devices per student.</p>
               </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-gray-100">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#FF6636]/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-[#FF6636]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="w-12 h-12 bg-[#592b98]/10 rounded flex items-center justify-center mb-4 text-[#592b98]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#1A1F5E] mb-2">Device Authentication</h3>
-                  <p className="text-slate-500">All login attempts are verified through secure authentication protocols to prevent unauthorized access.</p>
-                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Authentication Checks</h3>
+                <p className="text-gray-600 text-sm">Verify login attempts automatically to keep every course session safe.</p>
               </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-gray-100">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#FF6636]/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-[#FF6636]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="w-12 h-12 bg-[#592b98]/10 rounded flex items-center justify-center mb-4 text-[#592b98]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8a6 6 0 0 0-12 0v4a6 6 0 0 0 12 0V8z" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#1A1F5E] mb-2">Instant Notifications</h3>
-                  <p className="text-slate-500">Students receive instant alerts when their account is accessed on a new device.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Instant Alerts</h3>
+                <p className="text-gray-600 text-sm">Students receive notifications when a new device accesses their account.</p>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="w-12 h-12 bg-[#592b98]/10 rounded flex items-center justify-center mb-4 text-[#592b98]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
                 </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Trusted Learning</h3>
+                <p className="text-gray-600 text-sm">Protect your reputation with a secure student experience.</p>
               </div>
             </div>
           </div>
 
-          <div className="hidden md:block">
-            <img
-              src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500&q=80"
-              alt="Secure Login"
-              className="rounded-3xl shadow-2xl"
-            />
+          <div className="relative">
+            <div className="rounded-lg overflow-hidden shadow-lg">
+              <img
+                src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=900&q=80"
+                alt="Secure Login"
+                className="w-full h-auto"
+              />
+            </div>
           </div>
         </div>
       </div>

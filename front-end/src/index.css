@@ -1,35 +1,51 @@
 @import "tailwindcss";
 
+:root {
+  /* Udemy-inspired color palette */
+  --udemy-purple: #592b98;
+  --udemy-purple-dark: #3e1f6b;
+  --udemy-teal: #00a496;
+  --udemy-black: #1a1a1a;
+  --udemy-gray-dark: #2d2f31;
+  --udemy-gray: #6a6f73;
+  --udemy-gray-light: #dce6f1;
+  --udemy-bg: #f7f9fa;
+  --udemy-white: #ffffff;
+  --udemy-star: #b4690e;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
-  
+
   body {
-    @apply antialiased text-[#1A1F5E] bg-[#F8FAFC];
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    @apply antialiased text-[#2d2f31] bg-white;
+    font-family: 'Graphik', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: normal;
   }
 
   /* Custom Scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-slate-50;
+    @apply bg-gray-100;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-200 rounded-full border-2 border-slate-50 hover:bg-[#FF6636]/50 transition-colors;
+    @apply bg-gray-300 rounded hover:bg-gray-400 transition-colors;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#1A1F5E] to-[#FF6636];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#592b98] to-[#00a496];
   }
-  
+
   .glass-card {
-    @apply bg-white/80 backdrop-blur-xl border border-white/20;
+    @apply bg-white border border-gray-200;
   }
 }
