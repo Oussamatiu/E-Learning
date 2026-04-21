@@ -27,7 +27,7 @@ class AuthController extends Controller
                 'role_id' => 'required|exists:roles,id'
             ]);
             logger($request->all());
-            // ✅ Transaction: حماية العمليات في DB
+           
             DB::beginTransaction();
 
             $verificationToken = Str::random(60);

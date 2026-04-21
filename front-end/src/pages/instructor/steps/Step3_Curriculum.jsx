@@ -14,14 +14,34 @@ const Step3_Curriculum = ({ state, dispatch, errors, courseId, onCreateSection, 
     dispatch({ type: 'UPDATE_LESSON', sectionTempId, lessonTempId, updates });
   };
 
-  const handleVideoFileChange = (sectionTempId, lessonTempId, file) => {
-    dispatch({
-      type: 'UPDATE_LESSON',
-      sectionTempId,
-      lessonTempId,
-      updates: { video_file: file }
-    });
+const handleVideoFileChange = (sectionTempId, lessonTempId, file) => {
+  if (!file) return;
+
+  const video = document.createElement('video');
+  const url = URL.createObjectURL(file);
+
+  video.src = url;
+
+  video.onloadedmetadata = () => {
+    console.log('Duration (seconds):', video.duration);
+    console.log('Duration (minutes):', (video.duration / 60).toFixed(2));
+
+    // ابطل الرابط فقط بعد النجاح
+    URL.revokeObjectURL(url);
   };
+
+  video.onerror = () => {
+    console.error('Failed to load video metadata');
+    URL.revokeObjectURL(url);
+  };
+
+  dispatch({
+    type: 'UPDATE_LESSON',
+    sectionTempId,
+    lessonTempId,
+    updates: { video_file: file }
+  });
+};
 
   const addSection = () => {
     // Just add empty section locally, user will create it via API

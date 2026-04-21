@@ -9,6 +9,7 @@ const CourseDetails = () => {
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedLesson, setSelectedLesson] = useState(null);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -30,7 +31,7 @@ const CourseDetails = () => {
           setSections(Array.isArray(sectionsData) ? sectionsData : sectionsData.data || []);
         }
       } catch (err) {
-        console.error('Error fetching course:', err);
+        console.error('Error fetching course:', err.error);
         setError(err.message || 'Failed to load course details');
       } finally {
         setLoading(false);
@@ -61,6 +62,11 @@ const CourseDetails = () => {
       </div>
     );
   }
+
+  // Close modal handler
+  const closeModal = () => {
+    setSelectedLesson(null);
+  };
 
   // Format price
   const formatPrice = (price) => {
@@ -127,7 +133,7 @@ const CourseDetails = () => {
                 {course.title}
               </h1>
               <p className="text-gray-300 text-sm mb-4 max-w-2xl">
-                Master React 18, Hooks, Redux, React Router, Next.js and more! Build production-ready web applications from scratch.
+                {course.description ? course.description.substring(0, 150) + '...' : 'No description available for this course.'}
               </p>
 
               <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -214,7 +220,7 @@ const CourseDetails = () => {
                           <div key={lesson.id || lIdx} className="p-4 flex justify-between items-center text-sm hover:bg-gray-50">
                             <div className="flex items-center gap-3">
                               {lesson.free ? (
-                                <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-4 h-4 text-green-500 fill-current" viewBox="0 0 20 20">
                                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                                   <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                                 </svg>
@@ -223,9 +229,19 @@ const CourseDetails = () => {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                 </svg>
                               )}
-                              <span className={lesson.free ? 'text-[#592b98]' : 'text-gray-700'}>{lesson.title}</span>
+                              <span className={lesson.free ? 'text-[#592b98] font-medium' : 'text-gray-700'}>{lesson.title}</span>
                             </div>
-                            <span className="text-gray-500">{lesson.duration || '5m'}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500">{lesson.duration || '5m'}</span>
+                              {lesson.free && lesson.video_url && (
+                                <button
+                                  onClick={() => setSelectedLesson(lesson)}
+                                  className="px-3 py-1 bg-[#592b98] text-white text-xs rounded hover:bg-[#3e1f6b] transition-colors"
+                                >
+                                  Watch Preview
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -327,6 +343,50 @@ const CourseDetails = () => {
           </div>
         </div>
       </section>
+
+      {/* Video Modal */}
+      {selectedLesson && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+          <div
+            className="bg-white rounded-lg max-w-xl w-full overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900 truncate">{selectedLesson.title}</h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+                aria-label="Close video preview"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Video */}
+            <div className="aspect-video bg-black">
+              {selectedLesson.video_url ? (
+                <video src={selectedLesson.video_url} controls className="w-full h-full" autoPlay playsInline />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            {selectedLesson.content && (
+              <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{selectedLesson.content}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -58,7 +58,7 @@ class LessonController extends Controller
 
             $videoPath = null;
             if ($request->hasFile('video_file')) {
-                $videoPath = $this->fileService->upload($request->file('video_file'), 'lessons/videos', 'local');
+                $videoPath = $this->fileService->upload($request->file('video_file'), 'lessons/videos', 'public');
             }
 
             $lesson = Lesson::create([

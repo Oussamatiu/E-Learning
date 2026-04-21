@@ -70,6 +70,8 @@ class CourseResource extends JsonResource
                             return [
                                 'id' => $lesson->id,
                                 'title' => $lesson->title,
+                                'content' => $lesson->content,
+                                'video_url' => $lesson->video_path ? asset('storage/' . $lesson->video_path) : null,
                                 'duration' => $lesson->duration ? $this->formatDuration($lesson->duration) : '5m',
                                 'free' => $lesson->is_free ?? false,
                             ];

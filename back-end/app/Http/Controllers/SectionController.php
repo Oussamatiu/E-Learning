@@ -21,7 +21,24 @@ class SectionController extends Controller
             $sections = Section::where('course_id', $courseId)
                 ->with('lessons')
                 ->orderBy('order')
-                ->get();
+                ->get()
+                ->map(function ($section) {
+                    return [
+                        'id' => $section->id,
+                        'title' => $section->title,
+                        'order' => $section->order,
+                        'lessons' => $section->lessons->sortBy('order')->map(function ($lesson) {
+                            return [
+                                'id' => $lesson->id,
+                                'title' => $lesson->title,
+                                'content' => $lesson->content,
+                                'video_url' => $lesson->video_path ? asset('storage/' . $lesson->video_path) : null,
+                                'duration' => $lesson->duration ? $this->formatDuration($lesson->duration) : '5m',
+                                'is_free' => $lesson->is_free ?? false,
+                            ];
+                        })->values(),
+                    ];
+                });
 
             return response()->json($sections, 200);
         } catch (\Exception $e) {
@@ -30,6 +47,13 @@ class SectionController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function formatDuration($minutes)
+    {
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        return $hours > 0 ? "{$hours}h {$mins}m" : "{$mins}m";
     }
 
     /**

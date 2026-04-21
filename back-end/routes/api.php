@@ -18,16 +18,15 @@ Route::get('/courses', [CourseController::class, 'index']);
 Route::get('/categories', [CategorieController::class, 'index']);
 Route::get('/instructor/courses', [CourseController::class, 'instructorCourses'])->middleware('auth:sanctum');
 Route::post('/courses/structure', [CourseStructureController::class, 'store'])->middleware('auth:sanctum');
-Route::resource('/courses', CourseController::class)->middleware('auth:sanctum')->except(['index']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/courses', [ApiCourseController::class, 'store']);
     Route::put('/courses/{course}', [ApiCourseController::class, 'update']);
-    Route::get('/courses/{id}', [CourseController::class, 'show']);
     Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
 
     // Course thumbnail upload
     Route::put('/courses/{course}/thumbnail', [CourseController::class, 'updateThumbnail']);
 });
+    Route::get('/courses/{id}', [CourseController::class, 'show']);
 
 // categories is public
 Route::get('/categories', [CategorieController::class, 'index']);
@@ -42,3 +41,13 @@ Route::resource('/courses/{courseId}/sections', SectionController::class)->middl
 Route::post('/courses/{courseId}/outcomes', [OutcomeController::class, 'store'])->middleware('auth:sanctum');
 Route::put('/courses/{courseId}/outcomes/{outcomeId}', [OutcomeController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/courses/{courseId}/outcomes/{outcomeId}', [OutcomeController::class, 'destroy'])->middleware('auth:sanctum');
+
+Route::get('/videos/{path}', function ($path) {
+    $fullPath = storage_path('app/private/' . $path);
+
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+
+    return response()->file($fullPath);
+})->where('path', '.*');
