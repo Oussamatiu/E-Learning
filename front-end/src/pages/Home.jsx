@@ -12,7 +12,7 @@ import { useOutletContext } from 'react-router-dom';
 const Home = () => {
 const { setId } = useOutletContext();
     useEffect(() => {
-        setId(2); 
+        setId(3); 
     },[]);
     return (
   <main className="min-h-screen bg-white">

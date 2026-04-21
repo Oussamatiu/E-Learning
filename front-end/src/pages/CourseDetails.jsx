@@ -1,58 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { fetchCourseById, fetchSections } from '../services/Coursesapi';
 
 const CourseDetails = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
+  const [course, setCourse] = useState(null);
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data for the course
-  const course = {
-    id: id || '1',
-    title: "Complete React Developer in 2024: Zero to Mastery",
-    category: "Programming",
-    rating: 4.8,
-    reviews: "2,450",
-    students: "12,340",
-    duration: "42h 30m",
-    price: "$49.99",
-    oldPrice: "$89.99",
-    instructor: {
-      name: "Sarah Johnson",
-      role: "Senior Frontend Engineer",
-      avatar: "https://i.pravatar.cc/150?u=sarah",
-      courses: 12,
-      students: "45k+",
-      bio: "Sarah is a passionate educator and software engineer with over 10 years of experience in building scalable web applications."
-    },
-    img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80",
-    lastUpdated: "April 2024",
-    language: "English",
-    learnings: [
-      "Master React.js from scratch to advanced level",
-      "Build real-world projects with React, Redux, and Firebase",
-      "Learn modern state management with Context API and Hooks",
-      "Understand performance optimization and testing",
-      "Deploy scalable React applications to production"
-    ],
-    curriculum: [
-      {
-        title: "Introduction to React",
-        lessons: [
-          { title: "What is React?", duration: "10:24", free: true },
-          { title: "Setting up your environment", duration: "15:45", free: true },
-          { title: "Our first React App", duration: "20:10", free: false }
-        ]
-      },
-      {
-        title: "React Components & Props",
-        lessons: [
-          { title: "Functional Components", duration: "18:20", free: false },
-          { title: "Understanding Props", duration: "22:15", free: false },
-          { title: "Component Lifecycle", duration: "25:40", free: false }
-        ]
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch course details (includes curriculum/sections)
+        const courseData = await fetchCourseById(id);
+        const course = courseData.data || courseData;
+        setCourse(course);
+
+        // Use curriculum from course data if available
+        if (course.curriculum && Array.isArray(course.curriculum)) {
+          setSections(course.curriculum);
+        } else {
+          // Fallback: fetch sections separately
+          const token = localStorage.getItem('token');
+          const sectionsData = await fetchSections(id, token || '');
+          setSections(Array.isArray(sectionsData) ? sectionsData : sectionsData.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching course:', err);
+        setError(err.message || 'Failed to load course details');
+      } finally {
+        setLoading(false);
       }
-    ]
+    };
+
+    fetchCourseData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#592b98] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading course...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error || 'Course not found'}</p>
+          <Link to="/" className="text-[#592b98] hover:underline">Back to Home</Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Format price
+  const formatPrice = (price) => {
+    if (!price) return 'Free';
+    return typeof price === 'number' ? `$${price.toFixed(2)}` : price;
   };
+
+  // Format duration
+  const formatDuration = (minutes) => {
+    if (!minutes) return '0h 0m';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  // Get instructor info
+  const instructor = course.instructor || { name: 'Unknown', bio: '', courses_count: 0, students_count: 0 };
 
   const renderStars = (rating) => {
     const fullStars = Math.floor(rating);
@@ -140,14 +165,16 @@ const CourseDetails = () => {
             <div className="border border-gray-200 rounded-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">What you'll learn</h2>
               <div className="grid md:grid-cols-2 gap-4">
-                {course.learnings.map((item, idx) => (
+                {course.learnings && course.learnings.length > 0 ? course.learnings.map((item, idx) => (
                   <div key={idx} className="flex gap-3 text-sm text-gray-700">
                     <svg className="w-4 h-4 text-green-500 fill-current flex-shrink-0 mt-0.5" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                     {item}
                   </div>
-                ))}
+                )) : (
+                  <p className="text-gray-500 text-sm col-span-2">No learning outcomes specified</p>
+                )}
               </div>
             </div>
 
@@ -170,22 +197,21 @@ const CourseDetails = () => {
 
               {activeTab === 'overview' && (
                 <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
-                  <p>Learn the skills to become a React.js expert. This comprehensive course takes you from absolute beginner to building production-ready applications with the world's most popular frontend library.</p>
-                  <p>We'll cover everything from the basic concepts like JSX and components, all the way to advanced topics like state management with Redux, performance optimization, and testing with Jest.</p>
+                  <p>{course.description || 'No description available for this course.'}</p>
                 </div>
               )}
 
               {activeTab === 'curriculum' && (
                 <div className="space-y-2">
-                  {course.curriculum.map((section, idx) => (
-                    <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
+                  {sections.length > 0 ? sections.map((section, idx) => (
+                    <div key={section.id || idx} className="border border-gray-200 rounded-lg overflow-hidden">
                       <div className="bg-gray-50 p-4 flex justify-between items-center">
                         <h3 className="font-semibold text-gray-900">{section.title}</h3>
-                        <span className="text-xs text-gray-500">{section.lessons.length} lessons</span>
+                        <span className="text-xs text-gray-500">{section.lessons?.length || 0} lessons</span>
                       </div>
                       <div className="divide-y divide-gray-100">
-                        {section.lessons.map((lesson, lIdx) => (
-                          <div key={lIdx} className="p-4 flex justify-between items-center text-sm hover:bg-gray-50">
+                        {section.lessons?.map((lesson, lIdx) => (
+                          <div key={lesson.id || lIdx} className="p-4 flex justify-between items-center text-sm hover:bg-gray-50">
                             <div className="flex items-center gap-3">
                               {lesson.free ? (
                                 <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -199,12 +225,14 @@ const CourseDetails = () => {
                               )}
                               <span className={lesson.free ? 'text-[#592b98]' : 'text-gray-700'}>{lesson.title}</span>
                             </div>
-                            <span className="text-gray-500">{lesson.duration}</span>
+                            <span className="text-gray-500">{lesson.duration || '5m'}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-gray-500 text-sm text-center py-8">No curriculum available</p>
+                  )}
                 </div>
               )}
 

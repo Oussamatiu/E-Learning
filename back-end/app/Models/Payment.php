@@ -2,26 +2,27 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'student_id',
-        'course_id',
+        'order_id',
         'amount',
+        'provider',
         'status',
-        'payment_method',
-        'transaction_id'
+        'transaction_id',
     ];
 
-    public function student()
-    {
-        return $this->belongsTo(Student::class);
-    }
+    protected $casts = [
+        'amount' => 'decimal:2',
+    ];
 
-    public function course()
+    public function order()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Order::class);
     }
 }

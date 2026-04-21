@@ -2,6 +2,6 @@
 
 <p>Click below to verify your email:</p>
 
-<a href="{{ url('/api/verify-email?token=' . $token) }}">
+<a href="{{ env('FRONTEND_URL') }}/verify-email/{{ $token }}">
     Verify Email
 </a>

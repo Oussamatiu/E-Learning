@@ -12,7 +12,7 @@ import { useOutletContext } from 'react-router-dom';
 const BecomeInstructor = () => {
     const { setId } = useOutletContext();
     useEffect(() => {
-        setId(3); 
+        setId(2); 
     },[]);
   return (
     <div className="min-h-screen bg-white">

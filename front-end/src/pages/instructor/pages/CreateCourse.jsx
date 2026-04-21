@@ -1,341 +1,304 @@
-import React, { useState } from 'react';
-import Topbar from '../components/Topbar';
-import Card from '../components/Card';
+import React, { useReducer, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchCategories, createCourse, createSection, createLesson } from '../../../services/Coursesapi';
+import courseReducer from '../../../reducers/courseReducer';
+import Step1_CourseInfo from '../steps/Step1_CourseInfo';
+import Step2_Outcomes   from '../steps/Step2_Outcomes';
+import Step3_Curriculum from '../steps/Step3_Curriculum';
+import Step4_Review     from '../steps/Step4_Review';
+
+const initialState = {
+  title: '',
+  description: '',
+  category_id: '',
+  price: '',
+  level: 'beginner',
+  status: 'draft',
+  thumbnail: null,
+  thumbnailPreview: null,
+  outcomes: [''],
+  sections: []
+};
 
 const CreateCourse = () => {
   const navigate = useNavigate();
+  const [state, dispatch]       = useReducer(courseReducer, initialState);
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    title: '',
-    subtitle: '',
-    description: '',
-    category: '',
-    level: '',
-    price: '',
-    thumbnail: null,
-    thumbnailPreview: null
-  });
+  const [loading, setLoading]   = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [error, setError]       = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [createdCourseId, setCreatedCourseId] = useState(null);
+
+  useEffect(() => {
+    fetchCategories().then(setCategories).catch(console.error);
+  }, []);
+
+  // Create course first (basic info + outcomes + thumbnail)
+  const createBaseCourse = async () => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+
+    formData.append('title', state.title);
+    formData.append('description', state.description);
+    formData.append('price', state.price);
+    formData.append('level', state.level);
+    formData.append('category_id', state.category_id);
+    formData.append('status', state.status);
+
+    if (state.thumbnail) {
+      formData.append('thumbnail_file', state.thumbnail);
+    }
+
+    // Outcomes
+    const filteredOutcomes = state.outcomes.filter(o => o.trim() !== '');
+    filteredOutcomes.forEach(outcome => {
+      formData.append('outcomes[]', outcome);
+    });
+
+    const res = await fetch('http://127.0.0.1:8000/api/courses/structure', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('Error response from server:', errorData);
+      throw new Error(errorData.message || 'Failed to create course');
+    }
+
+    const data = await res.json();
+    return data.course_id || data.data?.id;
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // Course and curriculum already created via API buttons
+      // Just navigate back to courses list
+      navigate('/instructor/courses');
+    } catch (err) {
+      setError(err.message || 'Failed to create course');
+      console.error('Error creating course:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateStep = (step) => {
+    const errors = {};
+    setError('');
+
+    if (step === 1) {
+      if (!state.title || state.title.trim() === '') {
+        errors.title = 'Course title is required';
+      }
+      if (!state.description || state.description.trim() === '') {
+        errors.description = 'Course description is required';
+      }
+      if (!state.category_id) {
+        errors.category_id = 'Please select a category';
+      }
+      if (!state.price) {
+        errors.price = 'Price is required';
+      }
+    }
+    if (step === 2) {
+      const validOutcomes = state.outcomes.filter(o => o.trim() !== '');
+      if (validOutcomes.length === 0) {
+        errors.outcome_0 = 'Please add at least one learning outcome';
+      }
+    }
+    if (step === 3) {
+      const validSections = state.sections.filter(s => s.title.trim() !== '');
+      if (validSections.length === 0) {
+        setError('Please add at least one section');
+        return false;
+      }
+      for (const section of validSections) {
+        const validLessons = section.lessons.filter(l => l.title.trim() !== '');
+        if (validLessons.length === 0) {
+          setError(`Section "${section.title}" must have at least one lesson`);
+          return false;
+        }
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const nextStep = async() => {
+    if (validateStep(currentStep)) {
+      if(currentStep === 2){
+          setLoading(true);
+          try {
+            const courseId = await createBaseCourse();
+            console.log('Created course with ID:', courseId);
+            setCreatedCourseId(courseId);
+            setCurrentStep(prev => prev + 1);
+          } catch (err) {
+            setError(err.message || 'Failed to create course');
+            console.error('Error creating course:', err);
+          }finally {
+              setLoading(false);
+          }
+        return;
+      }
+      setCurrentStep(prev => prev + 1);
+      setError('');
+    }
+  };
+
+  // Create a single section via API
+  const handleCreateSection = async (title) => {
+    if (!createdCourseId) {
+      throw new Error('Course not created yet');
+    }
+    const token = localStorage.getItem('token');
+
+    const formData = new FormData();
+    formData.append('title', title);
+
+    const res = await fetch(`http://127.0.0.1:8000/api/courses/${createdCourseId}/sections`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('Error creating section:', errorData);
+      throw new Error(errorData.message || 'Failed to create section');
+    }
+
+    const data = await res.json();
+    return data.section?.id || data.data?.id || data.id;
+  };
+
+  // Create a single lesson via API
+  const handleCreateLesson = async (sectionId, lessonData) => {
+    if (!createdCourseId) {
+      throw new Error('Course not created yet');
+    }
+    const token = localStorage.getItem('token');
+
+    const formData = new FormData();
+    formData.append('title', lessonData.title);
+    formData.append('content', lessonData.content || '');
+    formData.append('is_free', lessonData.is_free ? '1' : '0');
+    formData.append('order', lessonData.order || 0);
+    formData.append('section_id', sectionId);
+
+    if (lessonData.video_file) {
+      formData.append('video_file', lessonData.video_file);
+    }
+
+    const res = await fetch(`http://127.0.0.1:8000/api/courses/${createdCourseId}/lessons`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to create lesson');
+    }
+
+    const data = await res.json();
+    return data.lesson?.id || data.data?.id || data.id;
+  };
+
+  const prevStep = () => setCurrentStep(prev => prev - 1);
 
   const steps = [
-    { number: 1, title: 'Course Info', description: 'Basic details' },
-    { number: 2, title: 'Curriculum', description: 'Add sections & lessons' },
-    { number: 3, title: 'Details', description: 'Category, price & more' },
-    { number: 4, title: 'Review', description: 'Preview & publish' }
+    { num: 1, label: 'Basic Info' },
+    { num: 2, label: 'Outcomes' },
+    { num: 3, label: 'Curriculum' },
+    { num: 4, label: 'Review' },
   ];
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleThumbnailChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData(prev => ({
-        ...prev,
-        thumbnail: file,
-        thumbnailPreview: URL.createObjectURL(file)
-      }));
-    }
-  };
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Course Title *</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="e.g., React Masterclass 2024: Build Modern Web Apps"
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent text-sm"
-              />
-              <p className="text-xs text-gray-500 mt-1">Maximum 60 characters. Be descriptive and catchy.</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Course Subtitle *</label>
-              <input
-                type="text"
-                name="subtitle"
-                value={formData.subtitle}
-                onChange={handleChange}
-                placeholder="e.g., Master React from basics to advanced with hooks, context, and Next.js"
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent text-sm"
-              />
-              <p className="text-xs text-gray-500 mt-1">Maximum 120 characters.</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Course Description *</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={6}
-                placeholder="Describe what students will learn, course requirements, and target audience..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent text-sm resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Course Thumbnail *</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center hover:border-[#592b98] transition-colors cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleThumbnailChange}
-                  className="hidden"
-                  id="thumbnail-upload"
-                />
-                <label htmlFor="thumbnail-upload" className="cursor-pointer">
-                  {formData.thumbnailPreview ? (
-                    <img src={formData.thumbnailPreview} alt="Preview" className="mx-auto h-40 rounded-md object-cover" />
-                  ) : (
-                    <>
-                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm text-gray-600 mt-2">Click to upload or drag and drop</p>
-                      <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB (1200x675px recommended)</p>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="text-center py-12">
-            <svg className="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Course Curriculum Builder</h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">Add sections and organize your lessons with our drag & drop builder. Create engaging content with videos, articles, and quizzes.</p>
-            <button
-              onClick={() => navigate('/instructor/course-structure')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#592b98] text-white rounded-md font-medium text-sm hover:bg-[#3e1f6b] transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
-              Open Curriculum Builder
-            </button>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent text-sm"
-              >
-                <option value="">Select a category</option>
-                <option value="development">Development</option>
-                <option value="business">Business</option>
-                <option value="design">Design</option>
-                <option value="marketing">Marketing</option>
-                <option value="data-science">Data Science</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Level *</label>
-              <select
-                name="level"
-                value={formData.level}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent text-sm"
-              >
-                <option value="">Select level</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-                <option value="all-levels">All Levels</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Price (USD) *</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  placeholder="49.99"
-                  className="w-full px-4 py-3 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent text-sm"
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <Card className="bg-gray-50">
-              <h3 className="font-semibold text-gray-900 mb-4">Course Preview</h3>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-500">Title</p>
-                  <p className="font-medium text-gray-900">{formData.title || 'Not provided'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Subtitle</p>
-                  <p className="text-gray-900">{formData.subtitle || 'Not provided'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Description</p>
-                  <p className="text-gray-900 whitespace-pre-line">{formData.description || 'Not provided'}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Category</p>
-                    <p className="font-medium text-gray-900 capitalize">{formData.category || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Level</p>
-                    <p className="font-medium text-gray-900 capitalize">{formData.level || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Price</p>
-                    <p className="font-medium text-gray-900">${formData.price || '0'}</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-              <div className="flex gap-3">
-                <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div>
-                  <p className="text-sm font-medium text-yellow-800">Before publishing</p>
-                  <p className="text-xs text-yellow-700 mt-1">Your course will be reviewed within 24-48 hours. Make sure all videos are uploaded and the curriculum is complete.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div>
-      <Topbar />
+    <div className="min-h-screen bg-gray-50">
 
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/instructor/courses')}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to My Courses
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">Create New Course</h1>
-          <p className="text-gray-600 text-sm mt-1">Follow the steps below to create your course</p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="mb-8">
+      {/* Progress Steps */}
+      <section className="bg-white py-8 px-4 border-b border-gray-200">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
-            {steps.map((step, index) => (
-              <React.Fragment key={step.number}>
-                <div className="flex items-center">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm transition-colors ${
-                    currentStep >= step.number
-                      ? 'bg-[#592b98] text-white'
-                      : 'bg-gray-200 text-gray-500'
-                  }`}>
-                    {currentStep > step.number ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    ) : (
-                      step.number
-                    )}
+            {steps.map((s, index) => (
+              <React.Fragment key={s.num}>
+                <div className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors
+                    ${currentStep >= s.num ? 'bg-[#592b98] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                    {s.num}
                   </div>
-                  <div className="ml-3 hidden sm:block">
-                    <p className={`text-sm font-medium ${currentStep >= step.number ? 'text-gray-900' : 'text-gray-500'}`}>
-                      {step.title}
-                    </p>
-                    <p className="text-xs text-gray-500">{step.description}</p>
-                  </div>
+                  <span className={`text-xs mt-2 font-medium hidden sm:block
+                    ${currentStep >= s.num ? 'text-[#592b98]' : 'text-gray-400'}`}>
+                    {s.label}
+                  </span>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-4 ${
-                    currentStep > step.number ? 'bg-[#592b98]' : 'bg-gray-200'
-                  }`} />
+                  <div className={`flex-1 h-1 mx-2 rounded
+                    ${currentStep > s.num ? 'bg-[#592b98]' : 'bg-gray-200'}`}
+                  />
                 )}
               </React.Fragment>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Form */}
-        <Card>{renderStep()}</Card>
-
-        {/* Navigation Buttons */}
-        <div className="flex items-center justify-between mt-6">
-          <button
-            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-            disabled={currentStep === 1}
-            className="flex items-center gap-2 px-6 py-2.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Previous
-          </button>
-
-          {currentStep < steps.length ? (
-            <button
-              onClick={() => setCurrentStep(prev => Math.min(steps.length, prev + 1))}
-              className="flex items-center gap-2 px-6 py-2.5 bg-[#592b98] text-white rounded-md text-sm font-medium hover:bg-[#3e1f6b] transition-colors"
-            >
-              Next
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                // Handle publish
-                navigate('/instructor/courses');
-              }}
-              className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-              Submit for Review
-            </button>
-          )}
+      {/* Error */}
+      {error && (
+        <div className="max-w-4xl mx-auto mt-4 px-4">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            {error}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Steps Content */}
+      <section className="bg-white py-12 px-4">
+        <div className="max-w-4xl mx-auto space-y-8">
+
+          {currentStep === 1 && <Step1_CourseInfo  state={state} dispatch={dispatch} categories={categories} errors={fieldErrors} />}
+          {currentStep === 2 && <Step2_Outcomes    state={state} dispatch={dispatch} errors={fieldErrors} />}
+          {currentStep === 3 && <Step3_Curriculum  state={state} dispatch={dispatch} errors={fieldErrors} courseId={createdCourseId} onCreateSection={handleCreateSection} onCreateLesson={handleCreateLesson} />}
+          {currentStep === 4 && <Step4_Review      state={state} loading={loading} onSubmit={handleSubmit} onBack={prevStep} courseId={createdCourseId} />}
+
+          {/* Navigation */}
+          {currentStep < 4 && (
+            <div className="flex justify-between pt-4">
+              {currentStep > 1 ? (
+                <button
+                  onClick={prevStep}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md font-semibold hover:bg-gray-50"
+                >
+                  Back
+                </button>
+              ) : (
+                <div />
+              )}
+              <button
+                onClick={nextStep}
+                className="px-8 py-3 bg-[#592b98] text-white rounded-md font-semibold hover:bg-[#3e1f6b]"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+        </div>
+      </section>
     </div>
   );
 };

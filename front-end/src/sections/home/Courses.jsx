@@ -30,7 +30,7 @@ export const CourseCard = ({ id, title, category, img, instructor, price, rating
     >
       {/* Image */}
       <div className="relative aspect-video overflow-hidden bg-gray-100">
-        <img src={img} alt={title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+        <img src={"http://127.0.0.1:8000/storage/" + img} alt={title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
         {isBestseller && (
           <span className="absolute top-2 left-2 bg-[#b4690e] text-white text-xs font-bold px-2 py-1 rounded-sm uppercase tracking-wider">
             Bestseller

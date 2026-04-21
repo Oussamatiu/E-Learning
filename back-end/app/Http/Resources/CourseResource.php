@@ -13,39 +13,80 @@ class CourseResource extends JsonResource
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
-{
-    return [
-        'id' => $this->id,
-        'title' => $this->title,
-        'description' => $this->description,
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'img' => $this->thumbnail ? asset('storage/' . $this->thumbnail) : null,
+            'thumbnail' => $this->thumbnail,
+            'price' => $this->price ? '$' . number_format($this->price, 2) : 'Free',
+            'oldPrice' => $this->price ? '$' . number_format($this->price * 1.8, 2) : '',
+            'level' => $this->level,
+            'status' => $this->status,
+            'duration' => $this->duration ? $this->formatDuration($this->duration) : '0h 0m',
+            'students' => $this->students_count ?? 0,
+            'students_count' => $this->students_count ?? 0,
+            'rating' => $this->rating ?? 4.5,
+            'reviews' => $this->reviews_count ?? 120,
+            'category' => $this->category?->name ?? 'Uncategorized',
 
-        'image' => $this->image,
-        'thumbnail' => $this->thumbnail,
+            'instructor' => $this->whenLoaded('instructor', function () {
+                $user = $this->instructor;
+                $profile = $user?->instructorProfile;
+                return [
+                    'id' => $user?->id,
+                    'name' => $user?->name ?? 'Unknown',
+                    'role' => 'Instructor',
+                    'avatar' => $profile?->avatar ? asset('storage/' . $profile->avatar) : ('https://ui-avatars.com/api/?name=' . urlencode($user?->name ?? 'User')),
+                    'bio' => $profile?->bio ?? '',
+                    'courses' => $user?->courses()->count() ?? 0,
+                    'students' => $user?->courses()->sum('students_count') ?? 0,
+                ];
+            }),
 
-        'price' => $this->price,
-        'level' => $this->level,
-        'status' => $this->status,
+            'outcomes' => $this->whenLoaded('outcomes', function () {
+                return $this->outcomes->map(function ($outcome) {
+                    return [
+                        'id' => $outcome->id,
+                        'description' => $outcome->description,
+                        'order' => $outcome->order,
+                    ];
+                });
+            }),
 
-        'duration' => $this->duration,
-        'students_count' => $this->students_count,
-        'rating' => $this->rating,
+            'learnings' => $this->whenLoaded('outcomes', function () {
+                return $this->outcomes->map(function ($outcome) {
+                    return $outcome->description;
+                });
+            }),
 
-        'instructor' => $this->whenLoaded('instructor', function () {
-            return [
-                'id' => $this->instructor?->id,
-                'name' => $this->instructor?->user?->name,
-            ];
-        }),
+            'curriculum' => $this->whenLoaded('sections', function () {
+                return $this->sections->sortBy('order')->map(function ($section) {
+                    return [
+                        'id' => $section->id,
+                        'title' => $section->title,
+                        'lessons' => $section->lessons->sortBy('order')->map(function ($lesson) {
+                            return [
+                                'id' => $lesson->id,
+                                'title' => $lesson->title,
+                                'duration' => $lesson->duration ? $this->formatDuration($lesson->duration) : '5m',
+                                'free' => $lesson->is_free ?? false,
+                            ];
+                        })->values(),
+                    ];
+                });
+            }),
 
-        'category' => $this->whenLoaded('category', function () {
-            return [
-                'id' => $this->category?->id,
-                'name' => $this->category?->name,
-            ];
-        }),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+        ];
+    }
 
-        'created_at' => $this->created_at,
-        'updated_at' => $this->updated_at,
-    ];
-}
+    private function formatDuration($minutes)
+    {
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        return $hours > 0 ? "{$hours}h {$mins}m" : "{$mins}m";
+    }
 }

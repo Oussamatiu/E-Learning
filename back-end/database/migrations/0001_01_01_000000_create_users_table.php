@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('image')->nullable();
-            $table->text('bio')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->foreignId('role_id')->constrained()->onDelete('cascade');
+            $table->string('email_verification_token')->nullable();
+            $table->timestamp('email_verification_expires_at')->nullable();
+            $table->foreignId('role_id')->constrained()->default(3); // Default to student role (id 3)
             $table->rememberToken();
             $table->timestamps();
         });

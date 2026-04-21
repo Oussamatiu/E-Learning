@@ -17,15 +17,14 @@ const Register = () => {
 
     try {
       const data = await apiService.register(formData);
-      if (data.user && data.token) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', data.token);
-        navigate('/');
+      if (data.user) {
+        navigate('/verify-email', { state: { email: formData.email } });
       } else {
         navigate('/login');
       }
     } catch (err) {
       setError(err.message);
+      console.error('Registration error:', err.error || err.message);
     } finally {
       setLoading(false);
     }

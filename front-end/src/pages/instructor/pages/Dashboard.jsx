@@ -1,151 +1,165 @@
-import React from 'react';
-import Topbar from '../components/Topbar';
-import Card from '../components/Card';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { fetchInstructorCourses } from '../../../services/Coursesapi';
 
 const Dashboard = () => {
-  const stats = [
-    { label: 'Total Courses', value: '12', change: '+2 this month', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', color: 'bg-[#592b98]' },
-    { label: 'Total Students', value: '8,542', change: '+12% from last month', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', color: 'bg-blue-500' },
-    { label: 'Total Revenue', value: '$45,234', change: '+18% from last month', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'bg-green-500' },
-    { label: 'Total Lessons', value: '156', change: '+8 this month', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'bg-orange-500' }
-  ];
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentCourses = [
-    { title: 'React Masterclass 2024', students: 1245, revenue: '$12,450', rating: 4.8, status: 'Published', statusColor: 'green' },
-    { title: 'Node.js Backend Development', students: 892, revenue: '$8,920', rating: 4.7, status: 'Published', statusColor: 'green' },
-    { title: 'TypeScript Basics', students: 0, revenue: '$0', rating: 0, status: 'Pending Review', statusColor: 'yellow' },
-    { title: 'Advanced CSS & Tailwind', students: 567, revenue: '$5,670', rating: 4.9, status: 'Published', statusColor: 'green' }
-  ];
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    fetchInstructorCourses(token)
+      .then(setCourses)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const stats = {
+    total: courses.length,
+    published: courses.filter(c => c.status === 'published').length,
+    drafts: courses.filter(c => c.status === 'draft').length,
+    students: courses.reduce((sum, c) => sum + (c.students_count || 0), 0),
+  };
 
   return (
-    <div>
-      <Topbar />
+    <div className="bg-white min-h-screen">
+      {/* Hero Section */}
+      <section className="bg-white py-12 px-4 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#592b98] mb-2">
+                Instructor Dashboard
+              </p>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-4">
+                Welcome back, Instructor
+              </h1>
+              <p className="text-gray-600 text-lg mb-8 max-w-xl">
+                Manage your courses, track enrolments, and monitor your performance from one place.
+              </p>
 
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 text-sm mt-1">Welcome back! Here's what's happening with your courses today.</p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {stats.map((stat, index) => (
-            <Card key={index} className="flex items-start gap-4">
-              <div className={`${stat.color} p-3 rounded-md`}>
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon} />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          {/* Revenue Chart Placeholder */}
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Revenue Overview</h3>
-              <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#592b98]">
-                <option>Last 7 days</option>
-                <option>Last 30 days</option>
-                <option>Last 90 days</option>
-              </select>
-            </div>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-md">
-              <div className="text-center text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                </svg>
-                <p className="text-sm">Revenue chart visualization</p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  to="/instructor/create-course"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-[#592b98] text-white font-semibold rounded-md hover:bg-[#3e1f6b] transition-colors"
+                >
+                  Create New Course
+                </Link>
+                <Link
+                  to="/instructor/courses"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white text-gray-900 border border-gray-300 font-semibold rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  View My Courses
+                </Link>
               </div>
             </div>
-          </Card>
 
-          {/* Students Chart Placeholder */}
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Student Enrollment</h3>
-              <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#592b98]">
-                <option>Last 7 days</option>
-                <option>Last 30 days</option>
-                <option>Last 90 days</option>
-              </select>
-            </div>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-md">
-              <div className="text-center text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-sm">Student enrollment chart</p>
+            <div className="relative flex justify-center">
+              <div className="rounded-lg overflow-hidden shadow-lg max-h-[420px] w-full">
+                <img
+                  src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=900&q=80"
+                  alt="Instructor dashboard"
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
-          </Card>
-        </div>
-
-        {/* Recent Courses */}
-        <Card padding="p-0">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Courses</h3>
-            <button className="text-sm text-[#592b98] font-medium hover:underline">View all</button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {recentCourses.map((course, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-gray-900">{course.title}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-gray-600">{course.students.toLocaleString()}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-gray-900">{course.revenue}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      {course.rating > 0 ? (
-                        <div className="flex items-center gap-1">
-                          <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          <span className="text-sm text-gray-700">{course.rating}</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">No ratings</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        course.statusColor === 'green'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="bg-white py-12 px-4 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Performance</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-[#f8f5ff] rounded-lg p-6 text-center">
+              <p className="text-sm text-gray-600 mb-2">Total Courses</p>
+              <p className="text-3xl font-bold text-[#592b98]">{stats.total}</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-6 text-center">
+              <p className="text-sm text-gray-600 mb-2">Published</p>
+              <p className="text-3xl font-bold text-green-600">{stats.published}</p>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-6 text-center">
+              <p className="text-sm text-gray-600 mb-2">Drafts</p>
+              <p className="text-3xl font-bold text-orange-600">{stats.drafts}</p>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-6 text-center">
+              <p className="text-sm text-gray-600 mb-2">Total Students</p>
+              <p className="text-3xl font-bold text-blue-600">{stats.students}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Recent Courses Section */}
+      <section className="bg-white py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Your Courses</h2>
+            <Link
+              to="/instructor/create-course"
+              className="px-5 py-2.5 bg-[#592b98] text-white rounded-md text-sm font-semibold hover:bg-[#3e1f6b] transition-colors"
+            >
+              + New Course
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">Loading your courses...</div>
+          ) : courses.length === 0 ? (
+            <div className="text-center py-12 border border-gray-200 rounded-lg">
+              <p className="text-lg font-semibold text-gray-900 mb-2">No courses yet</p>
+              <p className="text-gray-500 mb-6">Create your first course to start teaching</p>
+              <Link
+                to="/instructor/create-course"
+                className="inline-block px-6 py-3 bg-[#592b98] text-white rounded-md font-semibold hover:bg-[#3e1f6b] transition-colors"
+              >
+                Create Course
+              </Link>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {courses.slice(0, 6).map((course) => (
+                <div key={course.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                  {course.thumbnail ? (
+                    <img
+                      src={`http://127.0.0.1:8000/storage/${course.thumbnail}`}
+                      alt={course.title}
+                      className="w-full h-40 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-40 bg-gray-200 flex items-center justify-center">
+                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{course.title}</h3>
+                    <p className="text-sm text-gray-500 mb-3">{course.category?.name || 'Uncategorized'}</p>
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                        course.status === 'published'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-700'
                       }`}>
                         {course.status}
                       </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
+                      <Link
+                        to={`/instructor/edit-course/${course.id}`}
+                        className="text-sm text-[#592b98] hover:underline font-medium"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };

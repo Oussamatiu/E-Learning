@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './App.css'
 import Home from './pages/Home'
 import CourseDetails from './pages/CourseDetails'
@@ -6,17 +6,16 @@ import Categories from './pages/Categories'
 import Courses from './pages/Courses'
 import BecomeInstructor from './pages/BecomeInstructor'
 import { Main } from './layouts/Main'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
-import InstructorDashboards from './pages/instructor/InstructorDashboard'
+import VerifyEmail from './pages/auth/VerifyEmail'
+import CheckEmail from './pages/auth/CheckEmail'
+import StudentDashboard from './pages/student/StudentDashboard'
+import InstructorDashboard from './pages/InstructorDashboard'
+import InstructorLayout from './pages/instructor/InstructorLayout'
 import Dashboard from './pages/instructor/pages/Dashboard'
 import MyCourses from './pages/instructor/pages/MyCourses'
 import CreateCourse from './pages/instructor/pages/CreateCourse'
-import CourseStructure from './pages/instructor/pages/CourseStructure'
-import LessonEditor from './pages/instructor/pages/LessonEditor'
-import Analytics from './pages/instructor/pages/Analytics'
-import Settings from './pages/instructor/pages/Settings'
 
 function App() {
   return (
@@ -29,17 +28,21 @@ function App() {
       <Route path="/categories" element={<Categories />} />
       <Route path="/courses" element={<Courses />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/verify-email/:token" element={<CheckEmail />} />
+      <Route path="/student/dashboard" element={<StudentDashboard />} />
     </Route>
-    <Route path="/instructor" element={<InstructorDashboards />}>
+
+    {/* Public instructor dashboard (overview) */}
+    <Route path="/instructor" element={<InstructorDashboard />} />
+
+    {/* Protected instructor area with sidebar layout */}
+    <Route path="/instructor" element={<InstructorLayout />}>
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="courses" element={<MyCourses />} />
       <Route path="create-course" element={<CreateCourse />} />
       <Route path="edit-course/:id" element={<CreateCourse />} />
-      <Route path="course-structure" element={<CourseStructure />} />
-      <Route path="lesson-editor/:id" element={<LessonEditor />} />
-      <Route path="analytics" element={<Analytics />} />
-      <Route path="settings" element={<Settings />} />
     </Route>
   </Routes>
 </BrowserRouter>

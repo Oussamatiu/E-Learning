@@ -23,7 +23,12 @@ const Login = () => {
       if (data.token) {
         localStorage.setItem('token', data.token);
       }
-      navigate('/');
+
+      const isInstructor =
+        data.user?.role_id === 3 ||
+        data.user?.role?.title === 'instructor';
+
+      navigate(isInstructor ? '/instructor/dashboard' : '/student/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {

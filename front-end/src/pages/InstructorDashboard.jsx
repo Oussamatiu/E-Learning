@@ -9,38 +9,38 @@ const InstructorDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-//   useEffect(() => {
-//     const storedUser = localStorage.getItem('user');
-//     const token = localStorage.getItem('token');
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
 
-//     if (!storedUser || !token) {
-//       navigate('/login');
-//       return;
-//     }
+    if (!storedUser || !token) {
+      navigate('/login');
+      return;
+    }
 
-//     let parsedUser;
-//     try {
-//       parsedUser = JSON.parse(storedUser);
-//     } catch (err) {
-//       navigate('/login');
-//       return;
-//     }
+    let parsedUser;
+    try {
+      parsedUser = JSON.parse(storedUser);
+    } catch (err) {
+      navigate('/login');
+      return;
+    }
 
-//     if (parsedUser.role_id !== 3 && parsedUser.role !== 'instructor' && parsedUser.role?.title !== 'instructor') {
-//       navigate('/login');
-//       return;
-//     }
+    if (parsedUser.role_id !== 3 && parsedUser.role !== 'instructor' && parsedUser.role?.title !== 'instructor') {
+      navigate('/login');
+      return;
+    }
 
-//     setUser(parsedUser);
+    setUser(parsedUser);
 
-//     const controller = new AbortController();
-//     fetchInstructorCourses(token, controller.signal)
-//       .then((data) => setCourses(data))
-//       .catch((err) => setError(err.message || 'Unable to load instructor dashboard'))
-//       .finally(() => setLoading(false));
+    const controller = new AbortController();
+    fetchInstructorCourses(token, controller.signal)
+      .then((data) => setCourses(data))
+      .catch((err) => setError(err.message || 'Unable to load instructor dashboard'))
+      .finally(() => setLoading(false));
 
-//     return () => controller.abort();
-//   }, [navigate]);
+    return () => controller.abort();
+  }, [navigate]);
 
   const summary = useMemo(() => {
     const totalCourses = courses.length;

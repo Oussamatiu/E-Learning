@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Outcome;
+use App\Policies\OutcomePolicy;
 use Illuminate\Support\Facades\Route as FacadesRoute;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Routing\Route;
@@ -21,6 +23,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        
+        //
     }
 }

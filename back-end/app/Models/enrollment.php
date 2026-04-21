@@ -2,19 +2,26 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class enrollment extends Model
+class Enrollment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'student_id',
+        'user_id',
         'course_id',
-        'enrolled_at'
+        'progress',
     ];
 
-    public function student()
+    protected $casts = [
+        'progress' => 'decimal:2',
+    ];
+
+    public function user()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(User::class);
     }
 
     public function course()
