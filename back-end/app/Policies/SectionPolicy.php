@@ -7,59 +7,42 @@ use App\Models\User;
 
 class SectionPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return $user->role->title === 'instructor';
+        return $user->isInstructor();
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Section $section): bool
     {
-        return $user->role->title === 'instructor' && $section->course->instructor->user_id === $user->id;
+        return $user->isInstructor()
+            && $section->course?->instructor_id === $user->id;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return $user->role->title === 'instructor';
+        return $user->isInstructor();
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Section $section): bool
     {
-        return $user->role->title === 'instructor' ;
+        return $user->isInstructor()
+            && $section->course?->instructor_id === $user->id;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Section $section): bool
     {
-        return $user->role->title === 'instructor' && $section->course->instructor->user_id === $user->id;
+        return $user->isInstructor()
+            && $section->course?->instructor_id === $user->id;
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Section $section): bool
     {
-        return $user->role->title === 'instructor' && $section->course->instructor->user_id === $user->id;
+        return $user->isInstructor()
+            && $section->course?->instructor_id === $user->id;
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Section $section): bool
     {
-        return $user->role->title === 'instructor' && $section->course->instructor->user_id === $user->id;
+        return false;
     }
 }

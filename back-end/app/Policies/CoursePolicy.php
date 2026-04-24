@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Course;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class CoursePolicy
 {
@@ -21,31 +20,34 @@ class CoursePolicy
      */
     public function view(User $user, Course $course): bool
     {
-        return false;
+        return true;
     }
 
     /**
      * Determine whether the user can create models.
+     * Only instructors (role_id === 2) can create courses.
      */
     public function create(User $user): bool
     {
-        return $user->role && $user->role->title === 'instructor';
+        return $user->isInstructor();
     }
 
     /**
      * Determine whether the user can update the model.
+     * Must be an instructor AND the course owner.
      */
     public function update(User $user, Course $course): bool
     {
-        return $user->role && $user->role->title === 'instructor' && $course->instructor && $course->instructor->user_id === $user->id;
+        return $user->isInstructor() && $course->instructor_id === $user->id;
     }
 
     /**
      * Determine whether the user can delete the model.
+     * Must be an instructor AND the course owner.
      */
     public function delete(User $user, Course $course): bool
     {
-        return $user->role && $user->role->title === 'instructor' && $course->instructor && $course->instructor->user_id === $user->id;
+        return $user->isInstructor() && $course->instructor_id === $user->id;
     }
 
     /**

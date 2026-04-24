@@ -15,7 +15,7 @@ export const CourseCard = ({ id, title, category, img, instructor, price, rating
           if (i < fullStars) {
             return <svg key={i} className="w-4 h-4 text-[#b4690e] fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
           } else if (i === fullStars && hasHalfStar) {
-            return <svg key={i} className="w-4 h-4 text-[#b4690e]" fill="currentColor" viewBox="0 0 20 20"><defs><linearGradient id={`half-${i}`}><stop offset="50%" stopColor="#b4690e"/><stop offset="50%" stopColor="#e5e7eb"/></linearGradient></defs><path fill={`url(#half-${i})`} d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
+            return <svg key={i} className="w-4 h-4 text-[#b4690e]" fill="currentColor" viewBox="0 0 20 20"><defs><linearGradient id={`half-${i}`}><stop offset="50%" stopColor="#b4690e" /><stop offset="50%" stopColor="#e5e7eb" /></linearGradient></defs><path fill={`url(#half-${i})`} d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
           }
           return <svg key={i} className="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
         })}
@@ -87,11 +87,12 @@ export const Courses = () => {
     const loadCourses = async () => {
       setLoading(true);
       try {
-        const params = {};
+        const params = { per_page: 8 }; // Show 8 courses on home page
         if (searchQuery) params.search = searchQuery;
         if (activeFilter !== 'All') params.category = activeFilter;
-        const data = await fetchCourses(params);
-        setCourses(data);
+
+        const response = await fetchCourses(params);
+        setCourses(response.courses || []);
       } catch (error) {
         console.error('Error fetching courses:', error);
         setCourses([]);
@@ -105,27 +106,41 @@ export const Courses = () => {
   return (
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
+
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">A broad selection of courses</h2>
           <p className="text-gray-600">Choose from over 100,000 online video courses with new additions published every month</p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-8">
-           {categories.map(filter => (
-             <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
-                activeFilter === filter
-                ? 'bg-gray-900 text-white border-gray-900'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-gray-900'
-              }`}
-             >
-               {filter}
-             </button>
-           ))}
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div className="flex flex-wrap gap-2">
+            {categories.map(filter => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${activeFilter === filter
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-gray-900'
+                  }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative w-full md:w-64 flex-shrink-0">
+            <input
+              type="text"
+              placeholder="Search courses..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 pl-10 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+            />
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
         </div>
 
         {/* Course Grid */}
@@ -163,4 +178,3 @@ export const Courses = () => {
     </section>
   );
 };
-;

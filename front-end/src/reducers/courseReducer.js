@@ -172,6 +172,12 @@ const courseReducer = (state, action) => {
         )
       };
 
+    case 'SET_SECTIONS':
+      return {
+        ...state,
+        sections: action.sections
+      };
+
     default:
       return state;
   }

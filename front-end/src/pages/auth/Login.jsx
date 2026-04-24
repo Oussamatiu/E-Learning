@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { apiService } from '../../services/authApi';
 
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const setupMode = searchParams.get('setup') === 'profile';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,10 +27,15 @@ const Login = () => {
       }
 
       const isInstructor =
-        data.user?.role_id === 3 ||
+        data.user?.role_id === 2 ||
         data.user?.role?.title === 'instructor';
 
-      navigate(isInstructor ? '/instructor/dashboard' : '/student/dashboard');
+      // If they came from email verification as instructor → go to profile setup
+      if (isInstructor && setupMode) {
+        navigate('/instructor/setup-profile');
+      } else {
+        navigate(isInstructor ? '/instructor/dashboard' : '/student/dashboard');
+      }
     } catch (err) {
       setError(err.message);
     } finally {

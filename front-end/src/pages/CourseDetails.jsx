@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { fetchCourseById, fetchSections } from '../services/Coursesapi';
+import { addToCart, isInCart } from '../utils/cartUtils';
+import api from '../services/api';
 
 const CourseDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [course, setCourse] = useState(null);
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
+  const [cartStatus, setCartStatus] = useState('');
+  const [isEnrolled, setIsEnrolled] = useState(false); // ← from backend only
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -20,6 +27,8 @@ const CourseDetails = () => {
         const courseData = await fetchCourseById(id);
         const course = courseData.data || courseData;
         setCourse(course);
+        // Backend is the ONLY authority on enrollment status
+        setIsEnrolled(course.is_enrolled === true);
 
         // Use curriculum from course data if available
         if (course.curriculum && Array.isArray(course.curriculum)) {
@@ -40,6 +49,13 @@ const CourseDetails = () => {
 
     fetchCourseData();
   }, [id]);
+
+  // Check if course is in cart on component mount
+  useEffect(() => {
+    if (course) {
+      setCartStatus(isInCart(course.id) ? 'in-cart' : '');
+    }
+  }, [course]);
 
   if (loading) {
     return (
@@ -66,6 +82,58 @@ const CourseDetails = () => {
   // Close modal handler
   const closeModal = () => {
     setSelectedLesson(null);
+  };
+
+  // Add to cart handler
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      const success = addToCart(course);
+      if (success) {
+        setCartStatus('in-cart');
+        // Show success message briefly
+        setTimeout(() => setCartStatus(''), 2000);
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  // Buy now handler
+  const handleBuyNow = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setIsBuyingNow(true);
+    try {
+      const response = await api.post('/orders/buy-now', {
+        course_id: course.id
+      });
+
+      if (response.data.success) {
+        navigate(`/checkout/${response.data.order.id}`);
+      }
+    } catch (error) {
+      console.error('Error buying course:', error);
+      if (error.response?.status === 422) {
+        alert('You are already enrolled in this course!');
+      } else {
+        alert('Error processing your order. Please try again.');
+      }
+    } finally {
+      setIsBuyingNow(false);
+    }
   };
 
   // Format price
@@ -123,7 +191,7 @@ const CourseDetails = () => {
             <span>/</span>
             <Link to="/courses" className="hover:text-white">Courses</Link>
             <span>/</span>
-            <span className="text-white">{course.category}</span>
+            <span className="text-white">{course.category?.name || course.category}</span>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -300,13 +368,47 @@ const CourseDetails = () => {
                   <span className="text-green-600 text-sm font-semibold">45% OFF</span>
                 </div>
 
+                {/* Purchase / Access Card */}
                 <div className="space-y-3 mb-4">
-                  <button className="w-full bg-[#592b98] text-white font-semibold py-3 rounded-md hover:bg-[#3e1f6b] transition-colors">
-                    Add to cart
-                  </button>
-                  <button className="w-full bg-white text-gray-900 border border-gray-300 font-semibold py-3 rounded-md hover:bg-gray-50 transition-colors">
-                    Buy now
-                  </button>
+                  {isEnrolled ? (
+                    /* ── ENROLLED: show Open Course only ── */
+                    <Link
+                      to={`/student/courses/${course.id}/learn`}
+                      className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-3 rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Open Course
+                    </Link>
+                  ) : (
+                    /* ── NOT ENROLLED: show Buy / Cart ── */
+                    <>
+                      <button
+                        onClick={handleAddToCart}
+                        disabled={isAddingToCart || cartStatus === 'in-cart'}
+                        className={`w-full font-semibold py-3 rounded-md transition-colors ${
+                          cartStatus === 'in-cart'
+                            ? 'bg-green-600 text-white'
+                            : isAddingToCart
+                            ? 'bg-gray-400 text-white cursor-not-allowed'
+                            : 'bg-[#592b98] text-white hover:bg-[#3e1f6b]'
+                        }`}
+                      >
+                        {isAddingToCart ? 'Adding...' : cartStatus === 'in-cart' ? '✓ Already in Cart' : 'Add to cart'}
+                      </button>
+                      <button
+                        onClick={handleBuyNow}
+                        disabled={isBuyingNow}
+                        className={`w-full bg-white text-gray-900 border border-gray-300 font-semibold py-3 rounded-md transition-colors ${
+                          isBuyingNow ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {isBuyingNow ? 'Processing...' : 'Buy now'}
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <p className="text-xs text-gray-500 text-center mb-4">30-Day Money-Back Guarantee</p>

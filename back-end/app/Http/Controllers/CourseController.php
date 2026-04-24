@@ -20,14 +20,20 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Course::with('instructor', 'category');
+            $query = Course::with('instructor', 'category')
+                ->where('status', 'published'); // Only show published courses publicly
 
             if ($request->has('search')) {
                 $search = $request->search;
-                $query->where('title', 'like', "%{$search}%")
-                      ->orWhereHas('instructor.user', function($q) use ($search) {
-                          $q->where('name', 'like', "%{$search}%");
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhereHas('category', function($q2) use ($search) {
+                          $q2->where('name', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('instructor', function($q2) use ($search) {
+                          $q2->where('name', 'like', "%{$search}%");
                       });
+                });
             }
 
             if ($request->has('category')) {
@@ -36,8 +42,34 @@ class CourseController extends Controller
                 });
             }
 
-            $courses = $query->get();
-            return response()->json(CourseResource::collection($courses), 200);
+            if ($request->has('price')) {
+                $price = $request->price;
+                if ($price === 'Free') {
+                    $query->where('price', 0);
+                } elseif ($price === 'Paid') {
+                    $query->where('price', '>', 0);
+                }
+            }
+
+            if ($request->has('rating')) {
+                $rating = $request->rating;
+                if ($rating === '4.5 & up') $query->where('rating', '>=', 4.5);
+                elseif ($rating === '4.0 & up') $query->where('rating', '>=', 4.0);
+                elseif ($rating === '3.5 & up') $query->where('rating', '>=', 3.5);
+            }
+
+            $perPage = $request->input('per_page', 9);
+            $courses = $query->paginate($perPage);
+
+            return response()->json([
+                'data' => CourseResource::collection($courses->items()),
+                'meta' => [
+                    'current_page' => $courses->currentPage(),
+                    'last_page' => $courses->lastPage(),
+                    'per_page' => $courses->perPage(),
+                    'total' => $courses->total(),
+                ],
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 "message" => "Failed to fetch courses",
@@ -54,21 +86,15 @@ class CourseController extends Controller
         try {
             $user = $request->user();
 
-            if (!$user || $user->role?->title !== 'instructor') {
+            if (!$user || !$user->isInstructor()) {
                 return response()->json([
                     'message' => 'Forbidden: instructor access required'
                 ], 403);
             }
 
-            $instructor = $user->instructor;
-            if (!$instructor) {
-                return response()->json([
-                    'message' => 'Instructor profile not found'
-                ], 404);
-            }
-
-            $courses = Course::with('instructor', 'category')
-                ->where('instructor_id', $instructor->id)
+            $courses = Course::with(['category'])
+                ->where('instructor_id', $user->id)
+                ->withCount('enrollments as students_count')
                 ->get();
 
             return response()->json(CourseResource::collection($courses), 200);
@@ -159,25 +185,37 @@ class CourseController extends Controller
 }
 
     /**
-     * Display the specified resource.
+     * GET /api/courses/{id}
+     * Public — but injects is_enrolled=true/false for authenticated users.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         try {
-            $course = Course::with(['instructor.instructorProfile', 'category', 'outcomes', 'sections.lessons'])->findOrFail($id);
+            $course = Course::with([
+                'instructor.instructorProfile',
+                'category',
+                'outcomes',
+                'sections.lessons',
+            ])->findOrFail($id);
 
-            return response()->json([
-                'data' => new CourseResource($course)
-            ], 200);
+            $isEnrolled = false;
+            $user = $request->user('sanctum'); // optional auth — won't throw if unauthenticated
+
+            if ($user) {
+                $isEnrolled = \App\Models\Enrollment::where('user_id', $user->id)
+                    ->where('course_id', $course->id)
+                    ->exists();
+            }
+
+            $resource = (new CourseResource($course))->toArray($request);
+            $resource['is_enrolled'] = $isEnrolled;
+
+            return response()->json(['data' => $resource], 200);
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'message' => 'Course not found'
-            ], 404);
+            return response()->json(['message' => 'Course not found'], 404);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to fetch course',
-                'error' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Failed to fetch course', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -195,49 +233,60 @@ class CourseController extends Controller
     public function update(Request $request, string $id)
     {
         try {
-            $user = $request->user();
             $course = Course::findOrFail($id);
-            $this->authorize('update', $course);
+            $user = $request->user();
+
+            if (!$user || !$user->isInstructor() || $course->instructor_id !== $user->id) {
+                return response()->json(['message' => 'Forbidden: you do not own this course'], 403);
+            }
 
             $request->validate([
-                'title' => 'sometimes|required|string|max:255',
-                'description' => 'sometimes|required|string',
-                'price' => 'nullable|numeric',
-                'level' => 'nullable|string',
-                'status' => 'nullable|string',
-                'category_id' => 'sometimes|required|exists:categories,id',
-                'image' => 'nullable|string',
-                'duration' => 'nullable|integer',
+                'title'          => 'sometimes|required|string|max:255',
+                'description'    => 'sometimes|required|string',
+                'price'          => 'nullable|numeric',
+                'level'          => 'nullable|string',
+                'status'         => 'nullable|string',
+                'category_id'    => 'sometimes|required|exists:categories,id',
+                'duration'       => 'nullable|integer',
                 'students_count' => 'nullable|integer',
-                'rating' => 'nullable|numeric|min:0|max:5',
-                'thumbnail' => 'nullable|string',
+                'rating'         => 'nullable|numeric|min:0|max:5',
+                'thumbnail_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
             ]);
 
-            $course->update($request->only(['title', 'description', 'price', 'level', 'status', 'category_id', 'image', 'duration', 'students_count', 'rating', 'thumbnail']));
+            // Handle thumbnail upload
+            if ($request->hasFile('thumbnail_file')) {
+                $fileService = app(\App\Services\FileService::class);
+                if ($course->thumbnail) {
+                    $fileService->delete($course->thumbnail, 'public');
+                }
+                $course->thumbnail = $fileService->upload($request->file('thumbnail_file'), 'thumbnails', 'public');
+            }
 
-            // Update course outcomes if provided
+            $course->fill($request->only(['title', 'description', 'price', 'level', 'status', 'category_id', 'duration', 'students_count', 'rating']));
+            $course->save();
+
+            // Update outcomes if provided
             if ($request->has('outcomes') && is_array($request->outcomes)) {
-                // Delete existing outcomes
                 $course->outcomes()->delete();
-
-                // Create new outcomes
                 foreach ($request->outcomes as $index => $outcomeText) {
-                    Outcome::create([
-                        'course_id' => $course->id,
-                        'description' => $outcomeText,
-                        'order' => $index,
-                    ]);
+                    if (trim($outcomeText) !== '') {
+                        Outcome::create([
+                            'course_id'   => $course->id,
+                            'description' => $outcomeText,
+                            'order'       => $index,
+                        ]);
+                    }
                 }
             }
 
             return response()->json([
                 "message" => "Course updated successfully",
-                "course" => new CourseResource($course->load('outcomes'))
+                "course"  => new CourseResource($course->load('outcomes', 'category'))
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 "message" => "Failed to update course",
-                "error" => $e->getMessage()
+                "error"   => $e->getMessage()
             ], 500);
         }
     }
@@ -319,4 +368,28 @@ class CourseController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * POST /api/courses/{id}/publish
+     * Toggle course status between draft ↔ published.
+     */
+    public function publish(Request $request, $id)
+    {
+        $user   = $request->user();
+        $course = Course::findOrFail($id);
+
+        if (!$user->isInstructor() || $course->instructor_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $newStatus      = $course->status === 'published' ? 'draft' : 'published';
+        $course->status = $newStatus;
+        $course->save();
+
+        return response()->json([
+            'message' => $newStatus === 'published' ? 'Course published!' : 'Course moved to draft.',
+            'status'  => $newStatus,
+        ]);
+    }
 }
+

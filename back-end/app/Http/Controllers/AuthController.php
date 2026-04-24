@@ -26,7 +26,7 @@ class AuthController extends Controller
                 'password' => 'required|min:8',
                 'role_id' => 'required|exists:roles,id'
             ]);
-            logger($request->all());
+            
            
             DB::beginTransaction();
 
@@ -129,7 +129,8 @@ class AuthController extends Controller
     ]);
 
     return response()->json([
-        'message' => 'Email verified successfully'
+        'message' => 'Email verified successfully',
+        'role_id' => $user->role_id,
     ], 200);
 }
 }

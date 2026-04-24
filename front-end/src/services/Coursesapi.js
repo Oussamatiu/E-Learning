@@ -48,16 +48,31 @@ export const fetchCourses = async (params = {}, signal) => {
   if (params.category && params.category !== 'All') {
     query.set('category', params.category);
   }
+  if (params.price && params.price !== 'All') {
+    query.set('price', params.price);
+  }
+  if (params.rating && params.rating !== 'All') {
+    query.set('rating', params.rating);
+  }
+  if (params.page) query.set('page', params.page);
+  if (params.per_page) query.set('per_page', params.per_page);
 
   const endpoint = `/api/courses${query.toString() ? `?${query}` : ''}`;
 
   const data = await request(endpoint, {}, signal);
 
-  return Array.isArray(data) ? data : data.data ?? data.courses ?? [];
+  // Support both paginated and non-paginated responses
+  if (data.meta) {
+    return { courses: data.data || [], meta: data.meta };
+  }
+  return { courses: Array.isArray(data) ? data : data.data ?? data.courses ?? [], meta: null };
 };
 
 export const fetchCourseById = async (id, signal) => {
-  return request(`/api/courses/${id}`, {}, signal);
+  const token = localStorage.getItem('token');
+  return request(`/api/courses/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  }, signal);
 };
 
 export const fetchInstructorCourses = async (token, signal) => {
@@ -125,7 +140,9 @@ export const deleteCourse = async (courseId, token) => {
 };
 
 export const fetchCategories = async (signal) => {
-  const data = await request('/api/categories', {}, signal);
+  const data = await request('/api/categories', {headers: {
+    'Accept': 'application/json',
+  }}, signal);
   return Array.isArray(data) ? data : data.data ?? [];
 };
 

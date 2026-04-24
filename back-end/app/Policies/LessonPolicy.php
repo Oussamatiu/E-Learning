@@ -2,63 +2,57 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Lesson;
-use Illuminate\Auth\Access\Response;
+use App\Models\User;
 
 class LessonPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Lesson $lesson): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Only instructors can create lessons.
      */
     public function create(User $user): bool
     {
-        return $user->role->title === 'instructor';
+        return $user->isInstructor();
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Instructor must own the course the lesson belongs to.
      */
     public function update(User $user, Lesson $lesson): bool
     {
-        return $user->role->title === 'instructor';
+        if (!$user->isInstructor()) return false;
+
+        // Walk: lesson → section → course → instructor_id
+        $courseInstructorId = $lesson->section?->course?->instructor_id;
+        return $courseInstructorId !== null && $courseInstructorId === $user->id;
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Same ownership check for delete.
      */
     public function delete(User $user, Lesson $lesson): bool
     {
-        return $user->role->title === 'instructor' && $lesson->course?->instructor?->user_id === $user->id;
+        if (!$user->isInstructor()) return false;
+
+        $courseInstructorId = $lesson->section?->course?->instructor_id;
+        return $courseInstructorId !== null && $courseInstructorId === $user->id;
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Lesson $lesson): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Lesson $lesson): bool
     {
         return false;

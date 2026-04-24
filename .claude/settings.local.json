@@ -7,7 +7,9 @@
       "Bash(grep -A 10 'protected $fillable' app/Models/User.php)",
       "Bash(grep -A 8 'protected $fillable' app/Models/InstructorProfile.php)",
       "Bash(awk '{print $9}')",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(curl *)",
+      "Bash(findstr :3306)"
     ]
   }
 }

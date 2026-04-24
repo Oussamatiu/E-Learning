@@ -119,54 +119,57 @@ class LessonController extends Controller
     {
         try {
             $user = $request->user();
-            $lesson = Lesson::where('id', $lessonId)
-                    ->where('course_id', $courseId)
-                    ->first();
-            $this->authorize('update', $lesson);
+            $lesson = Lesson::findOrFail($lessonId);
+
+            // Inline ownership check — avoids redirect-to-login 500
+            $instructorId = $lesson->section?->course?->instructor_id;
+            if (!$user || !$user->isInstructor() || $instructorId !== $user->id) {
+                return response()->json(['status' => false, 'message' => 'Forbidden'], 403);
+            }
 
             $request->validate([
-                'title' => 'sometimes|required|string|max:255',
-                'video_file' => 'sometimes|nullable|file|mimes:mp4,mov,avi,wmv|max:512000',
-                'duration' => 'sometimes|required|integer',
+                'title'      => 'sometimes|required|string|max:255',
+                'content'    => 'sometimes|nullable|string',
+                'is_free'    => 'sometimes|boolean',
+                'video_file' => 'sometimes|nullable|file|mimes:mp4,mov,avi,wmv,webm|max:512000',
+                'duration'   => 'sometimes|nullable|integer',
                 'section_id' => 'nullable|exists:sections,id',
             ]);
 
             if ($request->hasFile('video_file')) {
-                // Delete old video if exists
                 if ($lesson->video_path) {
-                    $this->fileService->delete($lesson->video_path, 'local');
+                    $this->fileService->delete($lesson->video_path, 'public');
                 }
-                $lesson->video_path = $this->fileService->upload($request->file('video_file'), 'lessons/videos', 'local');
+                $lesson->video_path = $this->fileService->upload($request->file('video_file'), 'lessons/videos', 'public');
             }
 
-            if ($request->has('title')) {
-                $lesson->title = $request->title;
-            }
-            if ($request->has('duration')) {
-                $lesson->duration = $request->duration;
-            }
-            if ($request->has('section_id')) {
-                $lesson->section_id = $request->section_id;
-            }
+            if ($request->has('title'))      $lesson->title      = $request->title;
+            if ($request->has('content'))    $lesson->content    = $request->content;
+            if ($request->has('is_free'))    $lesson->is_free    = $request->boolean('is_free');
+            if ($request->has('duration'))   $lesson->duration   = $request->duration;
+            if ($request->has('section_id')) $lesson->section_id = $request->section_id;
+
             $lesson->save();
 
             return response()->json([
                 'message' => 'Lesson updated successfully',
-                'lesson' => [
-                    'id' => $lesson->id,
-                    'title' => $lesson->title,
-                    'duration' => $lesson->duration,
+                'lesson'  => [
+                    'id'         => $lesson->id,
+                    'title'      => $lesson->title,
+                    'content'    => $lesson->content,
+                    'is_free'    => $lesson->is_free,
+                    'duration'   => $lesson->duration,
                     'section_id' => $lesson->section_id,
                 ]
             ], 200);
         } catch (ValidationException $e) {
             return response()->json([
-                "status" => false,
+                "status"  => false,
                 "message" => $e->errors()
             ], 422);
         } catch (AuthorizationException $e) {
             return response()->json([
-                "status" => false,
+                "status"  => false,
                 "message" => $e->getMessage()
             ], 403);
         }

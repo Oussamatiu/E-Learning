@@ -2,27 +2,22 @@
 
 namespace App\Providers;
 
+use App\Events\CoursePurchased;
+use App\Listeners\HandleInstructorEarning;
+use App\Listeners\SendEmailToInstructor;
 use App\Models\Outcome;
 use App\Policies\OutcomePolicy;
-use Illuminate\Support\Facades\Route as FacadesRoute;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
-use Symfony\Component\Routing\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
+    public function register(): void {}
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        // Register event → listeners
+        Event::listen(CoursePurchased::class, SendEmailToInstructor::class);   // sync email
+        Event::listen(CoursePurchased::class, HandleInstructorEarning::class); // queued wallet credit
     }
 }

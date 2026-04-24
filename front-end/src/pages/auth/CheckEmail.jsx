@@ -8,33 +8,30 @@ export default function CheckEmail() {
   const [status, setStatus] = useState("loading");
 
   useEffect(() => {
-    if (!token) {
-      setStatus("error");
-      return;
-    }
+    if (!token) { setStatus("error"); return; }
 
     axios.post("http://127.0.0.1:8000/api/verify-email", { token })
-      .then(() => {
+      .then((res) => {
+        const roleId = res.data?.role_id;
         setStatus("success");
 
-        // لا يوجد login هنا
         setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+          // Instructor (role_id === 2) → send to login with a flag to redirect to profile setup
+          if (roleId === 2) {
+            navigate("/login?setup=profile");
+          } else {
+            navigate("/login");
+          }
+        }, 2500);
       })
-      .catch(
-        (error) => {
-      console.error("FULL ERROR:", error);
-
-      if (error.response) {
-        console.log("Backend message:", error.response.data.message);
-        setStatus(error.response.data.message || "error");
-      } else {
-        setStatus("network error");
-      }
-    }
-      );
-
+      .catch((error) => {
+        console.error("FULL ERROR:", error);
+        if (error.response) {
+          setStatus(error.response.data.message || "error");
+        } else {
+          setStatus("network error");
+        }
+      });
   }, [token]);
 console.log("TOKEN:", token);
   const renderContent = () => {

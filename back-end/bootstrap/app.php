@@ -15,8 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'check.api.token' => \App\Http\Middleware\CheckApiToken::class,
+            'enrolled'        => \App\Http\Middleware\EnsureEnrolled::class,
         ]);
     })
+    ->withEvents()
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (AuthenticationException $e) {
             return response()->json([

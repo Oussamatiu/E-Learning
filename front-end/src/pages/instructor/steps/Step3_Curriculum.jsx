@@ -14,33 +14,56 @@ const Step3_Curriculum = ({ state, dispatch, errors, courseId, onCreateSection, 
     dispatch({ type: 'UPDATE_LESSON', sectionTempId, lessonTempId, updates });
   };
 
+const MAX_VIDEO_MINUTES = 15;
+
 const handleVideoFileChange = (sectionTempId, lessonTempId, file) => {
   if (!file) return;
 
   const video = document.createElement('video');
   const url = URL.createObjectURL(file);
-
   video.src = url;
 
   video.onloadedmetadata = () => {
-    console.log('Duration (seconds):', video.duration);
-    console.log('Duration (minutes):', (video.duration / 60).toFixed(2));
-
-    // ابطل الرابط فقط بعد النجاح
     URL.revokeObjectURL(url);
+    const durationSeconds = Math.round(video.duration);
+    const durationMinutes = video.duration / 60;
+
+    if (durationMinutes > MAX_VIDEO_MINUTES) {
+      // Block: video too long
+      dispatch({
+        type: 'UPDATE_LESSON',
+        sectionTempId,
+        lessonTempId,
+        updates: {
+          video_file: null,
+          duration: null,
+          video_error: `Video is ${durationMinutes.toFixed(1)} min — max allowed is ${MAX_VIDEO_MINUTES} min.`
+        }
+      });
+    } else {
+      // Accept: store file + duration
+      dispatch({
+        type: 'UPDATE_LESSON',
+        sectionTempId,
+        lessonTempId,
+        updates: {
+          video_file: file,
+          duration: durationSeconds,
+          video_error: null
+        }
+      });
+    }
   };
 
   video.onerror = () => {
-    console.error('Failed to load video metadata');
     URL.revokeObjectURL(url);
+    dispatch({
+      type: 'UPDATE_LESSON',
+      sectionTempId,
+      lessonTempId,
+      updates: { video_file: null, duration: null, video_error: 'Could not read video file.' }
+    });
   };
-
-  dispatch({
-    type: 'UPDATE_LESSON',
-    sectionTempId,
-    lessonTempId,
-    updates: { video_file: file }
-  });
 };
 
   const addSection = () => {
@@ -104,7 +127,8 @@ const handleVideoFileChange = (sectionTempId, lessonTempId, file) => {
         content: lesson?.content || '',
         is_free: lesson?.is_free || false,
         order: state.sections.find(s => s.tempId === sectionTempId)?.lessons.length || 0,
-        video_file: lesson?.video_file
+        video_file: lesson?.video_file,
+        duration: lesson?.duration || 0
       };
       const lessonId = await onCreateLesson(sectionId, lessonData);
 
@@ -179,6 +203,7 @@ const handleVideoFileChange = (sectionTempId, lessonTempId, file) => {
       formData.append('title', lessonData.title);
       formData.append('content', lessonData.content || '');
       formData.append('is_free', lessonData.is_free ? '1' : '0');
+      formData.append('duration', lessonData.duration || 0);
       formData.append('_method', 'PUT');
       if (lessonData.video_file) {
         formData.append('video_file', lessonData.video_file);
@@ -339,15 +364,33 @@ const handleVideoFileChange = (sectionTempId, lessonTempId, file) => {
                         placeholder="Lesson content (optional)"
                       />
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">Lesson Video (optional)</label>
+                        <label className="block text-xs text-gray-500 mb-1">Lesson Video (optional — max {MAX_VIDEO_MINUTES} min)</label>
                         <input
                           type="file"
                           accept="video/*"
-                          onChange={(e) => handleVideoFileChange(section.tempId, lesson.tempId, e.target.files[0])}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          onChange={(e) => {
+                            // Reset input if previously blocked so user can reselect
+                            handleVideoFileChange(section.tempId, lesson.tempId, e.target.files[0]);
+                          }}
+                          className={`w-full px-3 py-2 border rounded-md text-sm ${
+                            lesson.video_error ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                          }`}
                         />
-                        {lesson.video_file && (
-                          <p className="mt-1 text-xs text-green-600">✓ {lesson.video_file.name}</p>
+                        {lesson.video_error && (
+                          <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            </svg>
+                            {lesson.video_error}
+                          </p>
+                        )}
+                        {lesson.video_file && !lesson.video_error && (
+                          <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            {lesson.video_file.name} — {Math.floor((lesson.duration || 0) / 60)}m {((lesson.duration || 0) % 60)}s
+                          </p>
                         )}
                       </div>
                     </div>

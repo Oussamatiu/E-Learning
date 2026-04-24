@@ -1,26 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useCartCount } from '../hooks/useCart';
 
 const Header = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [user, setUser] = useState(null);
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const dropRef   = useRef(null);
+  const [user, setUser]                 = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery]   = useState('');
+  const cartCount = useCartCount();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Failed to parse user from localStorage", e);
-        setUser(null);
-      }
+      try { setUser(JSON.parse(storedUser)); }
+      catch (e) { setUser(null); }
     } else {
       setUser(null);
     }
   }, [location.pathname]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropRef.current && !dropRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -32,10 +42,14 @@ const Header = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/courses?search=${encodeURIComponent(searchQuery)}`);
-    }
+    if (searchQuery.trim()) navigate(`/courses?search=${encodeURIComponent(searchQuery)}`);
   };
+
+  const isInstructor  = user?.role_id === 2 || user?.role?.title === 'instructor';
+  const dashboardPath = isInstructor ? '/instructor/dashboard' : '/student/dashboard';
+  const initials      = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
@@ -55,13 +69,14 @@ const Header = () => {
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center gap-6 py-4">
+
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="w-9 h-9 bg-[#592b98] rounded flex items-center justify-center text-white font-bold text-lg">L</div>
             <span className="text-xl font-bold text-gray-900 hidden sm:block">LearnTrack</span>
           </Link>
 
-          {/* Search Bar - Udemy Style */}
+          {/* Search */}
           <form onSubmit={handleSearch} className="flex-1 max-w-2xl hidden md:block">
             <div className="relative">
               <input
@@ -80,15 +95,28 @@ const Header = () => {
             </div>
           </form>
 
-          {/* Navigation */}
+          {/* Nav */}
           <div className="hidden lg:flex items-center gap-6">
             <Link to="/courses" className="text-gray-700 hover:text-[#592b98] font-medium text-sm">Browse Courses</Link>
-            <Link to="/categories" className="text-gray-700 hover:text-[#592b98] font-medium text-sm">Categories</Link>
           </div>
 
-          {/* Right Side Actions */}
+          {/* Right side */}
           <div className="flex items-center gap-3 ml-auto">
-            {/* Search for mobile */}
+
+            {/* Dashboard button */}
+            {user && (
+              <button
+                onClick={() => navigate(dashboardPath)}
+                className="hidden sm:flex items-center gap-2 px-4 py-2 border border-[#592b98] text-[#592b98] text-sm font-semibold rounded-md hover:bg-[#592b98] hover:text-white transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Dashboard
+              </button>
+            )}
+
+            {/* Mobile search */}
             <button className="md:hidden p-2 hover:bg-gray-100 rounded-full">
               <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -96,55 +124,104 @@ const Header = () => {
             </button>
 
             {/* Cart */}
-            <button className="relative p-2 hover:bg-gray-100 rounded-full">
+            <Link to="/cart" className="relative p-2 hover:bg-gray-100 rounded-full">
               <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#592b98] text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
-            </button>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#592b98] text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
+            {/* ── Avatar + Dropdown ── */}
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={dropRef}>
                 <button
-                  onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-full transition-colors"
+                  id="avatar-menu-btn"
+                  onClick={() => setShowDropdown(d => !d)}
+                  className="flex items-center gap-1.5 p-1 hover:bg-gray-100 rounded-full transition-colors focus:outline-none"
                 >
-                  <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
-                    <img src={user.avatar || "https://i.pravatar.cc/150?u=user"} alt={user.name} className="w-full h-full object-cover" />
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#592b98] to-[#9b6cd9] flex items-center justify-center text-white font-bold text-sm border-2 border-white shadow-sm">
+                    {initials}
                   </div>
+                  <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform hidden sm:block ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
 
+                {/* Dropdown */}
                 {showDropdown && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowDropdown(false)}></div>
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-20">
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.role || 'Student'}</p>
+                  <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50">
+
+                    {/* User card */}
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#592b98] to-[#9b6cd9] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                          <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                        </div>
                       </div>
-                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Profile</button>
-                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">My courses</button>
-                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Account settings</button>
-                      {(user.role_id === 3 || user.role === 'instructor' || user.role?.title === 'instructor') && (
+                      <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        isInstructor ? 'bg-purple-100 text-[#592b98]' : 'bg-blue-50 text-blue-600'
+                      }`}>
+                        {isInstructor ? 'Instructor' : 'Student'}
+                      </span>
+                    </div>
+
+                    {/* Menu items */}
+                    <div className="py-1">
+                      <button
+                        onClick={() => { navigate(dashboardPath); setShowDropdown(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#592b98] transition-colors text-left"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        Dashboard
+                      </button>
+
+                      {/* Profile — instructors only */}
+                      {isInstructor && (
                         <button
-                          onClick={() => {
-                            setShowDropdown(false);
-                            navigate('/instructor/dashboard');
-                          }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-[#592b98] hover:bg-gray-50"
+                          onClick={() => { navigate('/instructor/setup-profile'); setShowDropdown(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#592b98] transition-colors text-left"
                         >
-                          Instructor dashboard
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          My Profile
                         </button>
                       )}
-                      <div className="border-t border-gray-100 my-2"></div>
+
+                      <button
+                        onClick={() => { navigate('/courses'); setShowDropdown(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#592b98] transition-colors text-left"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        Browse Courses
+                      </button>
+                    </div>
+
+                    {/* Logout */}
+                    <div className="border-t border-gray-100 py-1">
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors text-left"
                       >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
                         Log out
                       </button>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             ) : (

@@ -20,8 +20,8 @@ class CourseResource extends JsonResource
             'description' => $this->description,
             'img' => $this->thumbnail ? asset('storage/' . $this->thumbnail) : null,
             'thumbnail' => $this->thumbnail,
-            'price' => $this->price ? '$' . number_format($this->price, 2) : 'Free',
-            'oldPrice' => $this->price ? '$' . number_format($this->price * 1.8, 2) : '',
+            'price' => $this->price,
+            'oldPrice' => $this->price ? $this->price * 1.8 : null,
             'level' => $this->level,
             'status' => $this->status,
             'duration' => $this->duration ? $this->formatDuration($this->duration) : '0h 0m',
@@ -29,7 +29,7 @@ class CourseResource extends JsonResource
             'students_count' => $this->students_count ?? 0,
             'rating' => $this->rating ?? 4.5,
             'reviews' => $this->reviews_count ?? 120,
-            'category' => $this->category?->name ?? 'Uncategorized',
+            'category' => $this->category ? ['id' => $this->category->id, 'name' => $this->category->name] : null,
 
             'instructor' => $this->whenLoaded('instructor', function () {
                 $user = $this->instructor;

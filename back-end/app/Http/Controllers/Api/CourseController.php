@@ -55,22 +55,24 @@ class CourseController extends Controller
     public function update(StoreCourseRequest $request, int $id): JsonResponse
     {
         try {
-            $course = $this->courseService->updateFullCourse(
-                $request->validated(),
-                $id
+            $course = \App\Models\Course::findOrFail($id);
+
+            $updated = $this->courseService->updateFullCourse(
+                $course,
+                $request->validated()
             );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Course updated successfully',
-                'data' => $course
+                'data'    => $updated
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update course',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
