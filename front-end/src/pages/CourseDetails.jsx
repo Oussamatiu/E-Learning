@@ -373,7 +373,7 @@ const CourseDetails = () => {
                   {isEnrolled ? (
                     /* ── ENROLLED: show Open Course only ── */
                     <Link
-                      to={`/student/courses/${course.id}/learn`}
+                      to={`/student/course/${course.id}`}
                       className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-3 rounded-md hover:bg-green-700 transition-colors"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

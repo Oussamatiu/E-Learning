@@ -121,15 +121,13 @@ const CourseLearning = () => {
   }, [sections, selectedLesson]);
 
   const completedCount = completedLessons.size;
-  const progressColor = progress >= 100 ? '#22c55e' : '#592b98';
+  const progressColor = progress >= 100 ? '#10b981' : '#592b98'; // Emerald green if 100%
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-[#592b98] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-gray-500 text-sm">Loading course content...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#592b98]/20 border-t-[#592b98] rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500 font-medium">Preparing your learning workspace...</p>
       </div>
     );
   }
@@ -138,24 +136,24 @@ const CourseLearning = () => {
   if (accessDenied) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 bg-[#f3eeff] rounded-full flex items-center justify-center">
+        <div className="text-center max-w-md bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+          <div className="w-20 h-20 mx-auto mb-6 bg-[#f8f5ff] rounded-full flex items-center justify-center">
             <svg className="w-10 h-10 text-[#592b98]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Course Locked</h2>
-          <p className="text-gray-500 mb-6 text-sm leading-relaxed">
-            You don't have access to this course. Purchase it to unlock all lessons and start learning.
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Course Locked</h2>
+          <p className="text-gray-500 mb-8 text-sm leading-relaxed">
+            You don't have access to this course yet. Purchase it to unlock all lessons and start your learning journey today.
           </p>
           <Link
             to={`/courses/${id}`}
-            className="inline-flex items-center gap-2 bg-[#592b98] text-white font-semibold px-6 py-3 rounded-md hover:bg-[#3e1f6b] transition-colors"
+            className="inline-flex items-center justify-center w-full gap-2 bg-[#592b98] text-white font-bold px-6 py-3.5 rounded-xl hover:bg-[#4a2480] transition-all shadow-sm hover:shadow"
           >
-            View Course & Purchase
+            View Course Details
           </Link>
-          <div className="mt-4">
-            <Link to="/" className="text-gray-400 hover:text-gray-600 text-sm">← Back to Home</Link>
+          <div className="mt-6">
+            <Link to="/" className="text-gray-400 hover:text-gray-600 text-sm font-medium transition-colors">← Back to Home</Link>
           </div>
         </div>
       </div>
@@ -164,15 +162,15 @@ const CourseLearning = () => {
 
   if (error || !course) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-14 h-14 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
-            <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <p className="text-red-600 mb-4 font-medium">{error || 'Course not found'}</p>
-          <Link to="/student/dashboard" className="text-[#592b98] hover:underline font-medium text-sm">← Back to Dashboard</Link>
+          <p className="text-red-600 mb-6 font-bold">{error || 'Course not found'}</p>
+          <Link to="/student/dashboard" className="text-[#592b98] hover:underline font-semibold text-sm">← Back to Dashboard</Link>
         </div>
       </div>
     );
@@ -184,61 +182,83 @@ const CourseLearning = () => {
   const isCurrentComplete = selectedLesson ? completedLessons.has(selectedLesson.id) : false;
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-screen flex flex-col bg-gray-900 font-sans overflow-hidden">
 
-      {/* ── Top Bar ── */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between flex-shrink-0 gap-4">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <Link to="/student/courses" className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+      {/* ── Top Navigation Bar ── */}
+      <header className="bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
+        
+        {/* Left: Back & Title */}
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          <Link 
+            to="/student/courses" 
+            className="text-gray-400 hover:text-white transition-colors flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-800"
+            title="Back to Dashboard"
+          >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold text-gray-900 truncate">{course.title}</h1>
-            <p className="text-xs text-gray-400">{completedCount} / {totalLessons} lessons completed</p>
+          
+          <div className="min-w-0 border-l border-gray-700 pl-4">
+            <h1 className="text-sm font-bold text-white truncate leading-tight tracking-wide">{course.title}</h1>
+            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-widest mt-0.5">
+              {completedCount} of {totalLessons} lessons completed
+            </p>
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
-          <div className="w-40 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${progress}%`, backgroundColor: progressColor }}
-            />
+        {/* Right: Progress & Sidebar Toggle */}
+        <div className="flex items-center gap-6 flex-shrink-0">
+          
+          {/* Progress Section */}
+          <div className="hidden sm:flex items-center gap-3">
+            <div className="flex flex-col items-end gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: progressColor }}>
+                {progress >= 100 ? 'Course Completed 🎉' : 'Your Progress'}
+              </span>
+              <div className="flex items-center gap-3">
+                <div className="w-32 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${progress}%`, backgroundColor: progressColor }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-white tabular-nums w-8 text-right">
+                  {Math.round(progress)}%
+                </span>
+              </div>
+            </div>
           </div>
-          <span className="text-xs font-bold tabular-nums" style={{ color: progressColor }}>
-            {Math.round(progress)}%
-          </span>
-          {progress >= 100 && (
-            <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">
-              🎉 Complete!
-            </span>
-          )}
+
+          <div className="w-px h-8 bg-gray-700 hidden sm:block"></div>
+
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all border ${
+              sidebarOpen 
+                ? 'bg-gray-800 text-white border-gray-700' 
+                : 'bg-transparent text-gray-400 border-transparent hover:text-white hover:bg-gray-800'
+            }`}
+          >
+            {sidebarOpen ? 'Hide Content' : 'Course Content'}
+            <svg className={`w-4 h-4 transition-transform duration-300 ${sidebarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
+      </header>
 
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-gray-500 hover:text-gray-700 p-1.5 hover:bg-gray-100 rounded-md transition-colors flex-shrink-0"
-          title={sidebarOpen ? 'Hide curriculum' : 'Show curriculum'}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
+      {/* ── Main Workspace ── */}
+      <div className="flex flex-1 overflow-hidden relative">
 
-      {/* ── Main Content ── */}
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* Lesson Area */}
-        <div className="flex-1 overflow-y-auto flex flex-col">
+        {/* ── Left: Video & Content Area ── */}
+        <main className="flex-1 overflow-y-auto flex flex-col bg-gray-50 scroll-smooth">
           {selectedLesson ? (
-            <>
-              {/* Video */}
-              {selectedLesson.video_path || selectedLesson.video_url ? (
-                <div className="bg-black aspect-video max-h-[55vh] flex items-center justify-center flex-shrink-0">
+            <div className="max-w-6xl mx-auto w-full flex flex-col min-h-full">
+              
+              {/* Video Player Wrapper */}
+              <div className="w-full bg-black shadow-lg relative aspect-video flex-shrink-0">
+                {selectedLesson.video_path || selectedLesson.video_url ? (
                   <video
                     key={selectedLesson.id}
                     src={
@@ -247,7 +267,7 @@ const CourseLearning = () => {
                         : `http://localhost:8000/api/courses/${id}/lessons/${selectedLesson.id}/stream`
                     }
                     controls
-                    className="w-full h-full"
+                    className="w-full h-full object-contain"
                     autoPlay
                     onEnded={() => {
                       if (!completedLessons.has(selectedLesson.id)) {
@@ -255,30 +275,38 @@ const CourseLearning = () => {
                       }
                     }}
                   />
-                </div>
-              ) : (
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 aspect-video max-h-[55vh] flex items-center justify-center flex-shrink-0">
-                  <div className="text-center">
-                    <svg className="w-16 h-16 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-gray-400 text-sm">No video for this lesson</p>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 border-b border-gray-800">
+                    <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-400 font-medium">Text or interactive lesson</p>
+                    <p className="text-sm text-gray-500 mt-1">Read the content below</p>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Lesson Controls */}
-              <div className="border-b border-gray-200 px-6 py-3 flex items-center justify-between bg-white flex-shrink-0">
-                <div className="flex items-center gap-3">
-                  {/* Mark complete toggle */}
+              {/* Lesson Toolbar */}
+              <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm flex-shrink-0">
+                <div className="flex-1 min-w-0 pr-4">
+                   <h2 className="text-xl font-extrabold text-gray-900 truncate">{selectedLesson.title}</h2>
+                   {selectedLesson.duration > 0 && (
+                     <p className="text-xs text-gray-500 font-semibold mt-1">Duration: {selectedLesson.duration} min</p>
+                   )}
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  {/* Mark complete button */}
                   <button
                     onClick={() => handleToggleComplete(selectedLesson.id)}
                     disabled={togglingLesson === selectedLesson.id}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
                       isCurrentComplete
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-[#592b98] text-white hover:bg-[#3e1f6b]'
-                    } disabled:opacity-60`}
+                        ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                        : 'bg-[#592b98] text-white shadow-sm hover:bg-[#4a2480] hover:shadow'
+                    } disabled:opacity-60 disabled:cursor-not-allowed`}
                   >
                     {togglingLesson === selectedLesson.id ? (
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -288,165 +316,211 @@ const CourseLearning = () => {
                       </svg>
                     ) : (
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                       </svg>
                     )}
-                    {isCurrentComplete ? 'Completed ✓' : 'Mark Complete'}
+                    {isCurrentComplete ? 'Completed' : 'Mark Complete'}
                   </button>
-                </div>
 
-                {/* Prev / Next */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => prevLesson && setSelectedLesson(prevLesson)}
-                    disabled={!prevLesson}
-                    className="px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    ← Prev
-                  </button>
-                  <button
-                    onClick={() => nextLesson && setSelectedLesson(nextLesson)}
-                    disabled={!nextLesson}
-                    className="px-3 py-2 text-sm bg-[#592b98] text-white rounded-lg hover:bg-[#3e1f6b] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next →
-                  </button>
+                  <div className="w-px h-6 bg-gray-200 mx-1"></div>
+
+                  {/* Navigation Arrows */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => prevLesson && setSelectedLesson(prevLesson)}
+                      disabled={!prevLesson}
+                      title="Previous Lesson"
+                      className="p-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => nextLesson && setSelectedLesson(nextLesson)}
+                      disabled={!nextLesson}
+                      title="Next Lesson"
+                      className="p-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Lesson Info */}
-              <div className="p-6 max-w-4xl">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">{selectedLesson.title}</h2>
-                {selectedLesson.duration > 0 && (
-                  <p className="text-xs text-gray-400 mb-4">⏱ {selectedLesson.duration} min</p>
-                )}
-                {selectedLesson.content && (
-                  <div className="mt-4 p-5 bg-gray-50 rounded-xl border border-gray-100">
-                    <h3 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Lesson Notes</h3>
-                    <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{selectedLesson.content}</p>
+              {/* Lesson Text Content */}
+              <div className="flex-1 p-6 md:p-10">
+                {selectedLesson.content ? (
+                  <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm max-w-4xl mx-auto prose prose-gray max-w-none">
+                    <h3 className="text-xs font-bold text-[#592b98] mb-4 uppercase tracking-widest border-b border-gray-100 pb-4">
+                      Lesson Notes & Resources
+                    </h3>
+                    <div className="text-gray-700 text-[15px] leading-relaxed whitespace-pre-line font-medium">
+                      {selectedLesson.content}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-40">
+                    <p className="text-gray-400 font-medium">No additional notes for this lesson.</p>
                   </div>
                 )}
               </div>
-            </>
+            </div>
           ) : (
-            <div className="flex items-center justify-center flex-1">
-              <div className="text-center">
-                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-gray-500 font-medium">Select a lesson to start learning</p>
+            <div className="flex items-center justify-center flex-1 h-full">
+              <div className="text-center bg-white p-12 rounded-3xl border border-gray-100 shadow-sm">
+                <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-12 h-12 text-[#592b98]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Ready to learn?</h3>
+                <p className="text-gray-500 font-medium max-w-xs mx-auto">Select a lesson from the curriculum sidebar to start watching.</p>
               </div>
             </div>
           )}
-        </div>
+        </main>
 
-        {/* ── Curriculum Sidebar ── */}
+        {/* ── Right: Curriculum Sidebar ── */}
         {sidebarOpen && (
-          <div className="w-80 border-l border-gray-200 bg-white flex-shrink-0 flex flex-col overflow-hidden">
+          <aside className="w-[340px] bg-white border-l border-gray-200 flex-shrink-0 flex flex-col z-20 shadow-[-4px_0_24px_-10px_rgba(0,0,0,0.05)] transition-all">
+            
             {/* Sidebar Header */}
-            <div className="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-              <h3 className="text-sm font-bold text-gray-900">Course Content</h3>
-              <p className="text-xs text-gray-500 mt-0.5">{sections.length} sections • {totalLessons} lessons</p>
-
-              {/* Mini progress */}
-              <div className="mt-3">
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-gray-500">{completedCount} completed</span>
-                  <span className="font-bold" style={{ color: progressColor }}>{Math.round(progress)}%</span>
-                </div>
-                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${progress}%`, backgroundColor: progressColor }}
-                  />
-                </div>
-              </div>
+            <div className="p-5 border-b border-gray-100 bg-white">
+              <h3 className="text-base font-extrabold text-gray-900 mb-1">Course Content</h3>
             </div>
 
-            {/* Lessons */}
-            <div className="overflow-y-auto flex-1 divide-y divide-gray-100">
+            {/* Curriculum Accordion */}
+            <div className="overflow-y-auto flex-1 custom-scrollbar">
               {sections.length > 0 ? sections.map((section, idx) => (
-                <div key={section.id || idx}>
+                <div key={section.id || idx} className="border-b border-gray-100 last:border-b-0">
+                  
+                  {/* Section Header */}
                   <button
                     onClick={() => toggleSection(idx)}
-                    className="w-full flex items-center justify-between p-3.5 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+                    className="w-full flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-100 transition-colors text-left group"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex-1 pr-4">
+                      <h4 className="text-sm font-bold text-gray-900 group-hover:text-[#592b98] transition-colors leading-tight mb-1">
+                        Section {idx + 1}: {section.title}
+                      </h4>
+                      <div className="flex items-center text-[11px] font-semibold text-gray-500">
+                        <span>{(section.lessons || []).filter(l => completedLessons.has(l.id)).length} / {section.lessons?.length || 0}</span>
+                        <span className="mx-1.5">•</span>
+                        <span>{section.lessons?.reduce((sum, l) => sum + (l.duration || 0), 0)} min</span>
+                      </div>
+                    </div>
+                    <div className="pt-0.5">
                       <svg
-                        className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${expandedSections[idx] ? 'rotate-90' : ''}`}
+                        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${expandedSections[idx] ? 'rotate-180' : ''}`}
                         fill="none" stroke="currentColor" viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                       </svg>
-                      <span className="text-xs font-bold text-gray-800 truncate">{section.title}</span>
                     </div>
-                    <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                      {(section.lessons || []).filter(l => completedLessons.has(l.id)).length}/{section.lessons?.length || 0}
-                    </span>
                   </button>
 
+                  {/* Section Lessons */}
                   {expandedSections[idx] && (
-                    <div className="bg-white">
+                    <div className="bg-white py-1">
                       {section.lessons?.length > 0 ? section.lessons.map((lesson, lIdx) => {
                         const isActive    = selectedLesson?.id === lesson.id;
                         const isDone      = completedLessons.has(lesson.id);
+                        
                         return (
                           <button
                             key={lesson.id || lIdx}
                             onClick={() => setSelectedLesson(lesson)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 pl-8 text-left transition-colors border-l-2 ${
+                            className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors relative group ${
                               isActive
-                                ? 'bg-[#f8f5ff] border-[#592b98]'
-                                : 'hover:bg-gray-50 border-transparent'
+                                ? 'bg-[#f8f5ff]'
+                                : 'hover:bg-gray-50'
                             }`}
                           >
-                            {/* Status icon */}
-                            <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-                              isDone
-                                ? 'bg-green-500 text-white'
-                                : isActive
-                                  ? 'bg-[#592b98] text-white'
-                                  : 'bg-gray-100 text-gray-400'
-                            }`}>
+                            {/* Active Indicator Line */}
+                            {isActive && (
+                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#592b98]"></div>
+                            )}
+
+                            {/* Checkbox / Play Icon */}
+                            <div className="mt-0.5 shrink-0">
                               {isDone ? (
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
+                                <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center shadow-sm">
+                                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                              ) : isActive ? (
+                                <div className="w-5 h-5 rounded-full bg-[#592b98] text-white flex items-center justify-center shadow-sm">
+                                  <svg className="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M4 4l12 6-12 6z" />
+                                  </svg>
+                                </div>
                               ) : (
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                </svg>
+                                <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-[#592b98]/40 transition-colors"></div>
                               )}
                             </div>
 
-                            <div className="min-w-0 flex-1">
-                              <p className={`text-xs truncate leading-tight ${
-                                isActive ? 'font-semibold text-[#592b98]' : isDone ? 'text-gray-500 line-through' : 'text-gray-700'
+                            {/* Text content */}
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-[13px] leading-snug mb-1 ${
+                                isActive ? 'font-bold text-[#592b98]' : 'font-semibold text-gray-700 group-hover:text-gray-900'
                               }`}>
-                                {lesson.title}
+                                {lIdx + 1}. {lesson.title}
                               </p>
-                              {lesson.duration > 0 && (
-                                <p className="text-[10px] text-gray-400 mt-0.5">{lesson.duration} min</p>
-                              )}
+                              <div className="flex items-center gap-2 text-[10px] font-semibold text-gray-500">
+                                {lesson.duration > 0 ? (
+                                  <span className="flex items-center gap-1">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    {lesson.duration} min
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2" /></svg>
+                                    Article
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </button>
                         );
                       }) : (
-                        <p className="text-xs text-gray-400 px-4 py-3 pl-8">No lessons in this section</p>
+                        <p className="text-xs font-medium text-gray-400 px-6 py-4 italic">No lessons in this section yet.</p>
                       )}
                     </div>
                   )}
                 </div>
               )) : (
-                <div className="p-8 text-center">
-                  <p className="text-gray-500 text-sm">No content available yet</p>
+                <div className="p-8 text-center flex flex-col items-center justify-center h-full">
+                  <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                  <p className="text-gray-500 text-sm font-medium">Curriculum is empty.</p>
                 </div>
               )}
             </div>
-          </div>
+          </aside>
         )}
       </div>
+
+      <style jsx="true">{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #e5e7eb;
+          border-radius: 10px;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+          background-color: #d1d5db;
+        }
+      `}</style>
     </div>
   );
 };

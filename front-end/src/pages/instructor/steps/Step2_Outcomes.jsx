@@ -14,44 +14,49 @@ const Step2_Outcomes = ({ state, dispatch, errors }) => {
   };
 
   const getInputClass = (index) => {
-    return `flex-1 px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent ${
-      errors && errors[`outcome_${index}`] ? 'border-red-500' : 'border-gray-300'
+    return `w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm transition-all focus:bg-white focus:ring-2 focus:ring-[#592b98]/20 focus:border-[#592b98] outline-none ${
+      errors && errors[`outcome_${index}`] ? 'border-red-400 focus:ring-red-500/20 focus:border-red-500' : ''
     }`;
   };
 
   return (
-    <div className="border border-gray-200 rounded-md p-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Learning Outcomes</h2>
-      <p className="text-gray-600 mb-6">What will students achieve after taking your course?</p>
+    <div className="p-2 sm:p-6">
+      <div className="mb-8">
+        <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Learning Outcomes</h2>
+        <p className="text-sm text-gray-500">What will students achieve after taking your course? Clear outcomes help increase sales.</p>
+      </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4 max-w-3xl">
         {state.outcomes.map((outcome, index) => (
-          <div key={index} className="flex gap-3">
-            <div className="flex-1 flex items-center gap-3">
-              <span className="w-6 h-6 bg-[#f8f5ff] text-[#592b98] rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                {index + 1}
-              </span>
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={outcome}
-                  onChange={(e) => handleOutcomeChange(index, e.target.value)}
-                  className={getInputClass(index)}
-                  placeholder={`Outcome ${index + 1}`}
-                />
-                {errors && errors[`outcome_${index}`] && (
-                  <p className="mt-1 text-sm text-red-600">{errors[`outcome_${index}`]}</p>
-                )}
-              </div>
+          <div key={index} className="flex items-start gap-4 group">
+            {/* Number badge */}
+            <div className="mt-1.5 w-8 h-8 rounded-full bg-[#f8f5ff] text-[#592b98] flex items-center justify-center font-bold text-xs flex-shrink-0 border border-[#e6dcf5]">
+              {index + 1}
             </div>
+            
+            <div className="flex-1">
+              <input
+                type="text"
+                value={outcome}
+                onChange={(e) => handleOutcomeChange(index, e.target.value)}
+                className={getInputClass(index)}
+                placeholder="e.g., Build responsive websites using HTML, CSS, and JavaScript"
+              />
+              {errors && errors[`outcome_${index}`] && (
+                <p className="mt-1.5 text-xs font-semibold text-red-500">{errors[`outcome_${index}`]}</p>
+              )}
+            </div>
+            
+            {/* Remove Button */}
             {state.outcomes.length > 1 && (
               <button
                 type="button"
                 onClick={() => removeOutcome(index)}
-                className="p-3 text-red-600 hover:bg-red-50 rounded-md flex-shrink-0"
+                className="mt-1.5 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors flex-shrink-0"
+                title="Remove outcome"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
             )}
@@ -59,16 +64,15 @@ const Step2_Outcomes = ({ state, dispatch, errors }) => {
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={addOutcome}
-        className="mt-4 flex items-center gap-2 text-[#592b98] hover:bg-[#f8f5ff] px-4 py-2 rounded-md"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Add Outcome
-      </button>
+      <div className="max-w-3xl mt-6 ml-12">
+        <button
+          type="button"
+          onClick={addOutcome}
+          className="inline-flex items-center gap-2 text-[#592b98] font-bold text-sm hover:bg-[#f8f5ff] px-5 py-2.5 rounded-xl border border-transparent hover:border-[#e6dcf5] transition-all"
+        >
+          <span className="text-lg leading-none">+</span> Add Another Outcome
+        </button>
+      </div>
     </div>
   );
 };

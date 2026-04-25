@@ -1,15 +1,14 @@
 import React from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
-  LayoutDashboard, BookOpen, Compass, LogOut, GraduationCap, PlusCircle, ChevronRight
+  LayoutDashboard, BookOpen, PlusCircle, LogOut, Compass, GraduationCap, Wallet
 } from 'lucide-react';
 
-const StudentSidebar = () => {
+const Sidebar = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const navigate = useNavigate();
   const initials = user.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'ST';
+    : 'US';
 
   const isInstructor = user.role_id === 3 || user.role === 'instructor' || user.role?.title === 'instructor';
 
@@ -43,37 +42,19 @@ const StudentSidebar = () => {
             {initials}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'Student'}</p>
-            <p className="text-xs text-gray-400">{isInstructor ? 'Instructor & Student' : 'Student'}</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
+            <p className="text-xs text-gray-400">{isInstructor ? 'Instructor' : 'Student'}</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mb-2">My Learning</p>
-
-        <NavLink to="/student/dashboard" className={navLinkClass}>
-          <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
-          <span>Dashboard</span>
-        </NavLink>
-
-        <NavLink to="/student/courses" className={navLinkClass}>
-          <BookOpen className="w-4 h-4 flex-shrink-0" />
-          <span>My Courses</span>
-        </NavLink>
-
-        <NavLink to="/courses" className={navLinkClass}>
-          <Compass className="w-4 h-4 flex-shrink-0" />
-          <span>Browse Courses</span>
-        </NavLink>
-
+        
         {isInstructor && (
           <>
-            <div className="pt-4 pb-2">
-              <div className="h-px bg-gray-100 mb-3" />
-              <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mb-2">Teaching</p>
-            </div>
+            {/* Teaching section */}
+            <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mb-2">Teaching</p>
 
             <NavLink to="/instructor/dashboard" className={navLinkClass}>
               <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
@@ -81,7 +62,7 @@ const StudentSidebar = () => {
             </NavLink>
 
             <NavLink to="/instructor/courses" className={navLinkClass}>
-              <GraduationCap className="w-4 h-4 flex-shrink-0" />
+              <BookOpen className="w-4 h-4 flex-shrink-0" />
               <span>Manage Courses</span>
             </NavLink>
 
@@ -89,8 +70,35 @@ const StudentSidebar = () => {
               <PlusCircle className="w-4 h-4 flex-shrink-0" />
               <span>Create Course</span>
             </NavLink>
+
+            <NavLink to="/instructor/wallet" className={navLinkClass}>
+              <Wallet className="w-4 h-4 flex-shrink-0" />
+              <span>Wallet</span>
+            </NavLink>
+
+            <div className="pt-4 pb-2">
+              <div className="h-px bg-gray-100 mb-3" />
+            </div>
           </>
         )}
+
+        {/* Student section */}
+        <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mb-2">My Learning</p>
+
+        <NavLink to="/student/dashboard" className={navLinkClass}>
+          <GraduationCap className="w-4 h-4 flex-shrink-0" />
+          <span>Student Dashboard</span>
+        </NavLink>
+
+        <NavLink to="/student/courses" className={navLinkClass}>
+          <BookOpen className="w-4 h-4 flex-shrink-0" />
+          <span>Enrolled Courses</span>
+        </NavLink>
+
+        <NavLink to="/courses" className={navLinkClass}>
+          <Compass className="w-4 h-4 flex-shrink-0" />
+          <span>Browse Courses</span>
+        </NavLink>
       </nav>
 
       {/* Footer */}
@@ -107,4 +115,4 @@ const StudentSidebar = () => {
   );
 };
 
-export default StudentSidebar;
+export default Sidebar;

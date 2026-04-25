@@ -1,11 +1,11 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import StudentSidebar from './StudentSidebar';
+import Sidebar from '../../components/Sidebar';
 
 const StudentLayout = () => {
   return (
     <div className="h-screen bg-white flex overflow-hidden">
-      <StudentSidebar />
+      <Sidebar />
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>

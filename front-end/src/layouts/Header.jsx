@@ -3,12 +3,12 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCartCount } from '../hooks/useCart';
 
 const Header = () => {
-  const navigate  = useNavigate();
-  const location  = useLocation();
-  const dropRef   = useRef(null);
-  const [user, setUser]                 = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dropRef = useRef(null);
+  const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [searchQuery, setSearchQuery]   = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const cartCount = useCartCount();
 
   useEffect(() => {
@@ -45,26 +45,29 @@ const Header = () => {
     if (searchQuery.trim()) navigate(`/courses?search=${encodeURIComponent(searchQuery)}`);
   };
 
-  const isInstructor  = user?.role_id === 2 || user?.role?.title === 'instructor';
+  const isInstructor = user?.role_id === 2 || user?.role?.title === 'instructor';
   const dashboardPath = isInstructor ? '/instructor/dashboard' : '/student/dashboard';
-  const initials      = user?.name
+  const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
       {/* Top Bar */}
-      <div className="border-b border-gray-100 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center text-sm">
-          <div className="flex items-center gap-4">
-            <Link to="/courses" className="text-gray-600 hover:text-[#592b98] font-medium">Explore Careers</Link>
-            <Link to="/mentors" className="text-gray-600 hover:text-[#592b98] font-medium hidden sm:block">Mentorship</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/become-instructor" className="text-gray-600 hover:text-[#592b98] font-medium">Teach on LearnTrack</Link>
+      {!user && (
+        <div className="border-b border-gray-100 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center text-sm">
+            <div className="flex items-center gap-4">
+              <Link to="/courses" className="text-gray-600 hover:text-[#592b98] font-medium">Explore Careers</Link>
+              <Link to="/mentors" className="text-gray-600 hover:text-[#592b98] font-medium hidden sm:block">Mentorship</Link>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link to="/become-instructor" className="text-gray-600 hover:text-[#592b98] font-medium">Teach on LearnTrack</Link>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
 
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4">
@@ -166,9 +169,8 @@ const Header = () => {
                           <p className="text-xs text-gray-400 truncate">{user.email}</p>
                         </div>
                       </div>
-                      <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        isInstructor ? 'bg-purple-100 text-[#592b98]' : 'bg-blue-50 text-blue-600'
-                      }`}>
+                      <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full ${isInstructor ? 'bg-purple-100 text-[#592b98]' : 'bg-blue-50 text-blue-600'
+                        }`}>
                         {isInstructor ? 'Instructor' : 'Student'}
                       </span>
                     </div>

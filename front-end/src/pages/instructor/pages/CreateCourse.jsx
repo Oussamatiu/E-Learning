@@ -398,8 +398,8 @@ const CreateCourse = () => {
       )}
 
       {/* Steps Content */}
-      <section className="bg-white py-10 px-4 mt-4 mx-4 max-w-4xl lg:mx-auto rounded-xl border border-gray-200 mb-8">
-        <div className="space-y-8">
+      <section className="bg-white py-6 sm:py-8 px-2 sm:px-4 mt-6 mx-4 max-w-4xl lg:mx-auto rounded-2xl border border-gray-200 mb-12 shadow-sm relative">
+        <div className="space-y-4">
           {currentStep === 1 && <Step1_CourseInfo state={state} dispatch={dispatch} categories={categories} errors={fieldErrors} />}
           {currentStep === 2 && <Step2_Outcomes   state={state} dispatch={dispatch} errors={fieldErrors} />}
           {currentStep === 3 && (
@@ -425,24 +425,24 @@ const CreateCourse = () => {
 
           {/* Navigation */}
           {currentStep < 4 && (
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100 gap-3">
+            <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-6 gap-3 px-2 sm:px-6">
               {/* Left: Back */}
               {currentStep > 1 ? (
                 <button
                   onClick={prevStep}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold text-sm hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors"
                 >
                   ← Back
                 </button>
               ) : <div />}
 
               {/* Right: Update (edit mode) + Next */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 {/* Update button — edit mode, steps 1 & 2 only */}
                 {isEditMode && currentStep <= 2 && (
                   <>
                     {updateSuccess && (
-                      <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+                      <span className="text-sm text-green-600 font-bold flex items-center gap-1">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
@@ -452,9 +452,9 @@ const CreateCourse = () => {
                     <button
                       onClick={handleUpdate}
                       disabled={updateSaving}
-                      className="px-5 py-2.5 border border-[#592b98] text-[#592b98] rounded-lg font-semibold text-sm hover:bg-[#f8f5ff] disabled:opacity-60 transition-colors"
+                      className="px-6 py-2.5 border-2 border-[#592b98] text-[#592b98] rounded-xl font-bold text-sm hover:bg-[#f8f5ff] disabled:opacity-60 transition-colors"
                     >
-                      {updateSaving ? 'Saving...' : '💾 Update Course'}
+                      {updateSaving ? 'Saving...' : 'Update Course'}
                     </button>
                   </>
                 )}
@@ -463,9 +463,9 @@ const CreateCourse = () => {
                 <button
                   onClick={nextStep}
                   disabled={loading}
-                  className="px-8 py-2.5 bg-[#592b98] text-white rounded-lg font-semibold text-sm hover:bg-[#3e1f6b] disabled:opacity-60 transition-colors"
+                  className="px-8 py-2.5 bg-[#592b98] text-white rounded-xl font-bold text-sm hover:bg-[#3e1f6b] disabled:opacity-60 transition-colors shadow-sm"
                 >
-                  {loading ? 'Creating...' : 'Next →'}
+                  {loading ? 'Processing...' : 'Next Step →'}
                 </button>
               </div>
             </div>
