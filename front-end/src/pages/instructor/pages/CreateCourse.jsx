@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchCategories, fetchCourseById } from '../../../services/Coursesapi';
+import { getCategories } from '../../../services/coursesService';
 import courseReducer from '../../../reducers/courseReducer';
 import Step1_CourseInfo from '../steps/Step1_CourseInfo';
 import Step2_Outcomes   from '../steps/Step2_Outcomes';
@@ -38,7 +38,7 @@ const CreateCourse = () => {
 
   // Load categories
   useEffect(() => {
-    fetchCategories().then(setCategories).catch(console.error);
+    getCategories().then(setCategories).catch(console.error);
   }, []);
 
   // In edit mode: load existing course data and pre-fill the form

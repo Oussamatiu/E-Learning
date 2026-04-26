@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchInstructorCourses } from '../../../services/Coursesapi';
+import { getInstructorCourses } from '../../../services/coursesService';
 
 const Dashboard = () => {
   const [courses, setCourses] = useState([]);
@@ -8,8 +8,7 @@ const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetchInstructorCourses(token)
+    getInstructorCourses()
       .then(setCourses)
       .catch(console.error)
       .finally(() => setLoading(false));

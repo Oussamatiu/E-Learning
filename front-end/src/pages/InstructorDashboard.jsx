@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { fetchInstructorCourses } from '../services/Coursesapi';
+import { getInstructorCourses } from '../services/coursesService';
 
 const InstructorDashboard = () => {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ const InstructorDashboard = () => {
     setUser(parsedUser);
 
     const controller = new AbortController();
-    fetchInstructorCourses(token, controller.signal)
+    getInstructorCourses({ signal: controller.signal })
       .then((data) => setCourses(data))
       .catch((err) => setError(err.message || 'Unable to load instructor dashboard'))
       .finally(() => setLoading(false));

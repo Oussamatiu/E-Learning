@@ -1,4 +1,4 @@
-import axios from "axios";
+import { verifyEmail } from "../../services/authService";
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 
@@ -10,28 +10,25 @@ export default function CheckEmail() {
   useEffect(() => {
     if (!token) { setStatus("error"); return; }
 
-    axios.post("http://127.0.0.1:8000/api/verify-email", { token })
-      .then((res) => {
-        const roleId = res.data?.role_id;
+    const checkToken = async () => {
+      try {
+        const data = await verifyEmail(token);
+        const roleId = data?.role_id;
         setStatus("success");
 
         setTimeout(() => {
-          // Instructor (role_id === 2) → send to login with a flag to redirect to profile setup
           if (roleId === 2) {
             navigate("/login?setup=profile");
           } else {
             navigate("/login");
           }
         }, 2500);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("FULL ERROR:", error);
-        if (error.response) {
-          setStatus(error.response.data.message || "error");
-        } else {
-          setStatus("network error");
-        }
-      });
+        setStatus(error.message || "error");
+      }
+    };
+    checkToken();
   }, [token]);
 console.log("TOKEN:", token);
   const renderContent = () => {

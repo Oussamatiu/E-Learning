@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation, useOutletContext } from 'react-router-dom';
-import { apiService } from '../../services/authApi';
+import { register } from '../../services/authService';
 
 
 const Register = () => {
@@ -16,7 +16,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const data = await apiService.register(formData);
+      const data = await register(formData);
       if (data.user) {
         navigate('/verify-email', { state: { email: formData.email } });
       } else {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchCourseById, fetchSections } from '../../services/Coursesapi';
+import { getCourse } from '../../services/coursesService';
+import { getSections } from '../../services/sectionsService';
 import api from '../../services/api';
 
 const CourseLearning = () => {
@@ -26,7 +27,7 @@ const CourseLearning = () => {
       setLoading(true);
       setError(null);
       try {
-        const courseData = await fetchCourseById(id);
+        const courseData = await getCourse(id);
         const course = courseData.data || courseData;
 
         // Backend decides access — frontend just reacts
@@ -49,8 +50,7 @@ const CourseLearning = () => {
           const count = course.curriculum.reduce((sum, s) => sum + (s.lessons?.length || 0), 0);
           setTotalLessons(count);
         } else {
-          const token = localStorage.getItem('token');
-          const sectionsData = await fetchSections(id, token || '');
+          const sectionsData = await getSections(id);
           const sects = Array.isArray(sectionsData) ? sectionsData : sectionsData.data || [];
           setSections(sects);
           const expanded = {};

@@ -311,23 +311,3 @@ export const deleteCourseOutcome = async (courseId, outcomeId, token) => {
   return data;
 };
 
-// ─── COURSE TYPE (FRONTEND MIRROR OF LARAVEL RESOURCE) ───────────────────────
-
-/**
- * @typedef {Object} Course
- * @property {number} id
- * @property {string} title
- * @property {string|null} image
- * @property {string} description
- * @property {number} price
- * @property {string} level
- * @property {string} status
- * @property {number} duration
- * @property {number} students_count
- * @property {number} rating
- * @property {string|null} thumbnail
- * @property {{id:number, name:string}} instructor
- * @property {{id:number, name:string}} category
- * @property {string} created_at
- * @property {string} updated_at
- */

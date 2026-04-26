@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchInstructorCourses, deleteCourse } from '../../../services/Coursesapi';
+import { getInstructorCourses, deleteCourse } from '../../../services/coursesService';
 import api from '../../../services/api';
 
 const MyCourses = () => {
@@ -13,8 +13,7 @@ const MyCourses = () => {
   useEffect(() => { loadCourses(); }, []);
 
   const loadCourses = () => {
-    const token = localStorage.getItem('token');
-    fetchInstructorCourses(token)
+    getInstructorCourses()
       .then(setCourses)
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -25,7 +24,7 @@ const MyCourses = () => {
     const token = localStorage.getItem('token');
     setDeleting(id);
     try {
-      await deleteCourse(id, token);
+      await deleteCourse(id);
       setCourses(c => c.filter(x => x.id !== id));
     } catch (e) {
       alert('Failed to delete: ' + e.message);

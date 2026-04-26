@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { CourseCard } from '../sections/home/Courses';
-import { fetchCourses, fetchCategories } from '../services/Coursesapi';
+import { getCourses, getCategories } from '../services/coursesService';
 
 const Courses = () => {
   const location = useLocation();
@@ -35,7 +35,7 @@ const Courses = () => {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const cats = await fetchCategories();
+        const cats = await getCategories();
         setCategories(['All', ...cats.map(cat => cat.name)]);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -53,7 +53,7 @@ const Courses = () => {
       if (activePrice !== 'All') params.price = activePrice;
       if (activeRating !== 'All') params.rating = activeRating;
       
-      const response = await fetchCourses(params);
+      const response = await getCourses(params);
       
       setCourses(response.courses || []);
       if (response.meta) {

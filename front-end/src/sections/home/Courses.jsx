@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchCourses, fetchCategories } from '../../services/Coursesapi';
+import { getCourses, getCategories } from '../../services/coursesService';
 
 export const CourseCard = ({ id, title, category, img, instructor, price, rating, reviews, students, duration, isBestseller }) => {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ export const Courses = () => {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const cats = await fetchCategories();
+        const cats = await getCategories();
         setCategories(['All', ...cats.map(cat => cat.name)]);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -91,7 +91,7 @@ export const Courses = () => {
         if (searchQuery) params.search = searchQuery;
         if (activeFilter !== 'All') params.category = activeFilter;
 
-        const response = await fetchCourses(params);
+        const response = await getCourses(params);
         setCourses(response.courses || []);
       } catch (error) {
         console.error('Error fetching courses:', error);

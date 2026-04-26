@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { fetchCourseById, fetchSections } from '../services/Coursesapi';
+import { getCourse } from '../services/coursesService';
+import { getSections } from '../services/sectionsService';
 import { addToCart, isInCart } from '../utils/cartUtils';
 import api from '../services/api';
 
@@ -24,7 +25,7 @@ const CourseDetails = () => {
       setError(null);
       try {
         // Fetch course details (includes curriculum/sections)
-        const courseData = await fetchCourseById(id);
+        const courseData = await getCourse(id);
         const course = courseData.data || courseData;
         setCourse(course);
         // Backend is the ONLY authority on enrollment status
@@ -35,8 +36,7 @@ const CourseDetails = () => {
           setSections(course.curriculum);
         } else {
           // Fallback: fetch sections separately
-          const token = localStorage.getItem('token');
-          const sectionsData = await fetchSections(id, token || '');
+          const sectionsData = await getSections(id);
           setSections(Array.isArray(sectionsData) ? sectionsData : sectionsData.data || []);
         }
       } catch (err) {

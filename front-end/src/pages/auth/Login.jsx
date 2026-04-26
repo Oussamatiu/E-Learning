@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { apiService } from '../../services/authApi';
+import { login } from '../../services/authService';
 
 
 const Login = () => {
@@ -18,7 +18,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const data = await apiService.login(email, password);
+      const data = await login({ email, password });
       if (data.user) {
         localStorage.setItem('user', JSON.stringify(data.user));
       }

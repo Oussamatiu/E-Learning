@@ -2,11 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCart, removeFromCart, clearCart, getCartTotal } from '../utils/cartUtils';
 import api from '../services/api';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import CheckoutForm from '../components/payment/CheckoutForm';
+
+// Initialize Stripe outside of the component to avoid recreating the Stripe object on every render
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const CartPage = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   useEffect(() => {
     setCartItems(getCart());
@@ -17,27 +24,33 @@ const CartPage = () => {
     setCartItems(getCart());
   };
 
-  const handleCheckout = async () => {
+  const handleCheckoutClick = () => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
       return;
     }
+    setShowCheckout(true);
+  };
 
+  const handlePaymentSuccess = async (paymentMethod) => {
     setIsCheckingOut(true);
     try {
+      // Mocking the backend call with the payment method
       const response = await api.post('api/orders/checkout', {
-        courses: cartItems.map(item => ({ id: item.id }))
+        courses: cartItems.map(item => ({ id: item.id })),
+        payment_method_id: paymentMethod.id
       });
 
       if (response.data.success) {
         clearCart();
-        alert('Checkout successful! Redirecting to your dashboard...');
+        alert('Payment successful! Redirecting to your dashboard...');
         navigate('/student/dashboard');
       }
     } catch (error) {
       console.error('Error during checkout:', error);
       alert('Error processing your order. Please try again.');
+      setShowCheckout(false);
     } finally {
       setIsCheckingOut(false);
     }
@@ -119,17 +132,30 @@ const CartPage = () => {
               <span className="text-2xl font-bold text-[#592b98]">${typeof total === 'number' ? total.toFixed(2) : '0.00'}</span>
             </div>
 
-            <button
-              onClick={handleCheckout}
-              disabled={isCheckingOut}
-              className="w-full bg-[#592b98] text-white font-semibold py-3 rounded-md hover:bg-[#3e1f6b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
-            </button>
-
-            <p className="text-xs text-gray-500 text-center mt-3">
-              30-Day Money-Back Guarantee on all courses
-            </p>
+            {!showCheckout ? (
+              <>
+                <button
+                  onClick={handleCheckoutClick}
+                  disabled={isCheckingOut}
+                  className="w-full bg-[#592b98] text-white font-semibold py-3 rounded-md hover:bg-[#3e1f6b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Proceed to Checkout
+                </button>
+                <p className="text-xs text-gray-500 text-center mt-3">
+                  30-Day Money-Back Guarantee on all courses
+                </p>
+              </>
+            ) : (
+              <div className="mt-4">
+                <Elements stripe={stripePromise}>
+                  <CheckoutForm 
+                    total={total} 
+                    onSuccess={handlePaymentSuccess} 
+                    onCancel={() => setShowCheckout(false)} 
+                  />
+                </Elements>
+              </div>
+            )}
           </div>
         </div>
 
