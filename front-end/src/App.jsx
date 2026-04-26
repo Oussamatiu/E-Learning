@@ -16,6 +16,7 @@ import Dashboard from './pages/instructor/pages/Dashboard'
 import MyCourses from './pages/instructor/pages/MyCourses'
 import CreateCourse from './pages/instructor/pages/CreateCourse'
 import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
 import Wallet from './pages/instructor/pages/Wallet'
 import InstructorSetupProfile from './pages/instructor/InstructorSetupProfile'
 import StudentLayout from './pages/student/StudentLayout'
@@ -34,6 +35,7 @@ function App() {
       <Route path="/course/:id" element={<CourseDetails />} />
       <Route path="/courses" element={<Courses />} />
       <Route path="/cart" element={<CartPage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/login" element={<Login />} />

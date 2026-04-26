@@ -30,7 +30,7 @@ export const updateCourse = (courseId, courseData) => apiClient.put(`/courses/${
 
 export const deleteCourse = (courseId) => apiClient.delete(`/courses/${courseId}`);
 
-export const getCategories = () => apiClient.get('/api/categories')
+export const getCategories = () => apiClient.get('/categories')
   .then(data => Array.isArray(data) ? data : data.data ?? []);
 
 export const enrollInCourse = (courseId) => apiClient.post(`/courses/${courseId}/enroll`);
