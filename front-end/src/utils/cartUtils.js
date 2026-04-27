@@ -64,12 +64,12 @@ export const removeFromCart = (courseId) => {
   }
 };
 
-// Clear entire cart
+
 export const clearCart = () => {
   try {
     localStorage.removeItem(CART_STORAGE_KEY);
 
-    // Dispatch cart updated event
+    
     window.dispatchEvent(new Event('cart-updated'));
 
     return true;

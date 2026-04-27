@@ -36,7 +36,7 @@ const MyCourses = () => {
   const handlePublish = async (id) => {
     setPublishing(id);
     try {
-      const res = await api.post(`api/courses/${id}/publish`);
+      const res = await api.post(`courses/${id}/publish`);
       setCourses(prev =>
         prev.map(c => c.id === id ? { ...c, status: res.data.status } : c)
       );

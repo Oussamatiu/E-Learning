@@ -59,4 +59,5 @@ Route::post('/courses/{courseId}/outcomes', [OutcomeController::class, 'store'])
 Route::put('/courses/{courseId}/outcomes/{outcomeId}', [OutcomeController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/courses/{courseId}/outcomes/{outcomeId}', [OutcomeController::class, 'destroy'])->middleware('auth:sanctum');
 
- 
+// Stripe Webhook (Must be public, signature verified inside)
+Route::post('/webhook/stripe', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook']);

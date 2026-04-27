@@ -10,7 +10,7 @@ const StudentCourses = () => {
   useEffect(() => {
     const fetchEnrollments = async () => {
       try {
-        const response = await api.get('api/student/enrollments');
+        const response = await api.get('student/enrollments');
         if (response.data.success) {
           setEnrollments(response.data.enrollments);
         }

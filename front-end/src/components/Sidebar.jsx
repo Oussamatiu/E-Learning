@@ -36,17 +36,7 @@ const Sidebar = () => {
       </div>
 
       {/* User card */}
-      <div className="px-5 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-[#592b98] to-[#9b6cd9] rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-            {initials}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
-            <p className="text-xs text-gray-400">{isInstructor ? 'Instructor' : 'Student'}</p>
-          </div>
-        </div>
-      </div>
+  
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
@@ -103,6 +93,17 @@ const Sidebar = () => {
 
       {/* Footer */}
       <div className="px-3 py-3 border-t border-gray-100">
+            
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-gradient-to-br from-[#592b98] to-[#9b6cd9] rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
+            <p className="text-xs text-gray-400">{isInstructor ? 'Instructor' : 'Student'}</p>
+          </div>
+        
+      </div>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"

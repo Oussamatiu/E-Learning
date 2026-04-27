@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
 export const Main = () => {
-  const [id, setId] = useState(2);
+  const [id, setId] = useState();
   const location = useLocation();
   const pathname = location.pathname;
   // Scroll to top on route change

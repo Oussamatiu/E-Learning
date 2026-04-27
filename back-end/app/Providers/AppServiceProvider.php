@@ -16,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Register event → listeners
+        
         Event::listen(CoursePurchased::class, SendEmailToInstructor::class);   // sync email
         Event::listen(CoursePurchased::class, HandleInstructorEarning::class); // queued wallet credit
     }

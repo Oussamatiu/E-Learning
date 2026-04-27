@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCart, clearCart, getCartTotal } from '../utils/cartUtils';
+import { getCart, getCartTotal } from '../utils/cartUtils';
 import api from '../services/api';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
@@ -10,118 +10,91 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState([]);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-
-  useEffect(() => {
-    const items = getCart();
-    if (items.length === 0) {
-      navigate('/cart');
-    }
-    setCartItems(items);
-  }, [navigate]);
-
-  const handlePaymentSuccess = async (paymentMethod) => {
-    setIsCheckingOut(true);
-    try {
-      const response = await api.post('api/orders/checkout', {
-        courses: cartItems.map(item => ({ id: item.id })),
-        payment_method_id: paymentMethod.id
-      });
-
-      if (response.data.success) {
-        clearCart();
-        alert('Payment successful! Redirecting to your dashboard...');
-        navigate('/student/dashboard');
-      }
-    } catch (error) {
-      console.error('Error during checkout:', error);
-      alert('Error processing your order. Please try again.');
-    } finally {
-      setIsCheckingOut(false);
-    }
-  };
+  const [cartItems] = useState(getCart());
+  const [clientSecret, setClientSecret] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true); // تبدأ بـ true لأننا سنبدأ الجلب فوراً
 
   const total = getCartTotal();
 
-  if (cartItems.length === 0) {
-    return null; // or a loading spinner
-  }
+  // جلب الـ clientSecret تلقائياً عند تحميل المكون
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      navigate('/cart');
+      return;
+    }
+
+    const initializePayment = async () => {
+      try {
+        const res = await api.post('api/orders/checkout', {
+          courses: cartItems.map(i => ({ id: i.id }))
+        });
+        setClientSecret(res.data.clientSecret);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to initialize payment. Redirecting to cart...");
+        navigate('/cart');
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializePayment();
+  }, [cartItems, navigate]);
+
+  if (cartItems.length === 0) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 text-center lg:text-left">
-          <h1 className="text-3xl font-semibold text-gray-900">Checkout</h1>
-          <p className="text-gray-500 mt-2">Complete your enrollment securely</p>
-        </div>
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          
+          {/* الجانب الأيسر: منطقة الدفع */}
+          <div className="w-full lg:w-7/12 xl:w-2/3">
+            <div className="bg-white rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.05)] border border-gray-100 p-8 min-h-[400px] flex flex-col justify-center">
+              
+              {isInitializing ? (
+                // واجهة تحميل احترافية أثناء جلب البيانات
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 border-4 border-[#592b98] border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Securing your connection...</h2>
+                  <p className="text-gray-500">Please wait while we initialize your secure payment gateway.</p>
+                </div>
+              ) : clientSecret ? (
+                // إظهار نموذج الدفع فور توفر الـ clientSecret
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <CheckoutForm total={total} />
+                </Elements>
+              ) : (
+                <div className="text-center text-red-500">
+                  Something went wrong. Please refresh the page.
+                </div>
+              )}
 
-        <div className="flex flex-col-reverse lg:flex-row gap-8 items-start">
-          {/* Left Column: Payment Form */}
-          <div className="w-full lg:w-7/12 xl:w-2/3 flex-shrink-0">
-            <div className="bg-white rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-              <Elements stripe={stripePromise} options={{
-                mode: 'payment',
-                amount: Math.max(50, Math.round(total * 100)),
-                currency: 'usd',
-              }}>
-                <CheckoutForm 
-                  total={total} 
-                  onSuccess={handlePaymentSuccess} 
-                  onCancel={() => navigate('/cart')} 
-                />
-              </Elements>
             </div>
           </div>
-          
-          {/* Right Column: Order Summary Snapshot */}
-          <div className="w-full lg:w-5/12 xl:w-1/3 flex-shrink-0 lg:sticky lg:top-24">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 px-2 hidden lg:block">Order Summary</h3>
-            <div className="bg-white rounded-3xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.05)] border border-gray-100">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 lg:hidden">Order Summary</h3>
+
+          {/* الجانب الأيمن: ملخص الطلب */}
+          <div className="w-full lg:w-5/12 xl:w-1/3 sticky top-24">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 px-2">Order Summary</h3>
               
-              <div className="max-h-[40vh] overflow-y-auto pr-2 mb-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-200">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-start gap-3 pb-4 border-b border-gray-50 last:border-b-0 last:pb-0">
-                    <img 
-                      src={`http://127.0.0.1:8000/storage/${item.thumbnail}`} 
-                      alt={item.title} 
-                      className="w-14 h-14 object-cover rounded-md flex-shrink-0 border border-gray-100"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug">{item.title}</h4>
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{item.instructor}</p>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 flex-shrink-0">
-                      ${Number(item.price).toFixed(2) || '0.00'}
-                    </span>
+              <div className="max-h-[300px] overflow-y-auto px-2 mb-6 space-y-4 scrollbar-thin">
+                {cartItems.map(item => (
+                  <div key={item.id} className="flex justify-between items-center text-sm gap-4">
+                    <span className="text-gray-600 truncate flex-1">{item.title}</span>
+                    <span className="font-bold text-gray-900 shrink-0">${Number(item.price).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
-              
-              <div className="pt-4 border-t border-gray-100 space-y-3">
-                <div className="flex justify-between items-center text-gray-600">
-                  <span className="text-sm">Subtotal</span>
-                  <span className="text-sm font-medium">${total.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-gray-600">
-                  <span className="text-sm">Taxes</span>
-                  <span className="text-sm font-medium">Calculated at next step</span>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                  <span className="font-medium text-gray-900">Total</span>
-                  <div className="text-right">
-                    <span className="font-medium text-2xl text-[#592b98] block">${total.toFixed(2)}</span>
-                    <span className="text-xs text-gray-500 font-normal">Including VAT</span>
-                  </div>
-                </div>
+
+              <div className="pt-4 border-t border-gray-100 flex justify-between items-center px-2">
+                <span className="text-gray-900 font-bold">Total Amount</span>
+                <span className="text-2xl font-bold text-[#592b98]">${total.toFixed(2)}</span>
               </div>
             </div>
-            
-          
           </div>
+
         </div>
-        
       </div>
     </div>
   );

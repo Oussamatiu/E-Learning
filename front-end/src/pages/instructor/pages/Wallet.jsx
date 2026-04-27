@@ -8,7 +8,7 @@ const Wallet = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('api/instructor/wallet')
+    api.get('instructor/wallet')
       .then(r => setData(r.data))
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -23,7 +23,7 @@ const Wallet = () => {
   const monthly   = data?.monthly  || [];
   const byCourse  = data?.by_course || [];
   const maxEarning = Math.max(...monthly.map(m => m.earnings), 1);
-
+console.log(data);
   return (
     <div className="p-6 max-w-5xl mx-auto">
 

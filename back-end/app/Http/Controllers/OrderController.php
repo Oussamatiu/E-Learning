@@ -47,53 +47,27 @@ class OrderController extends Controller
         $totalPrice = $courses->sum('price');
 
         try {
-            DB::beginTransaction();
+            \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
-            // Create Order
-            $order = Order::create([
-                'user_id'   => $user->id,
-                'course_id' => $courses->first()->id, // satisfies FK
-                'price'     => $totalPrice,
-                'status'    => 'completed',
+            $paymentIntent = \Stripe\PaymentIntent::create([
+                'amount' => max(50, round($totalPrice * 100)), // minimum 50 cents, amount in cents
+                'currency' => 'usd',
+                'metadata' => [
+                    'user_id' => $user->id,
+                    'courses' => json_encode($courseIds),
+                ],
             ]);
-
-            foreach ($courses as $course) {
-                // Create Order Item
-                OrderItem::create([
-                    'order_id'  => $order->id,
-                    'course_id' => $course->id,
-                    'price'     => $course->price,
-                ]);
-
-                // Enroll student
-                Enrollment::firstOrCreate([
-                    'user_id'   => $user->id,
-                    'course_id' => $course->id,
-                ], [
-                    'progress' => 0,
-                ]);
-            }
-
-            DB::commit();
-
-            // Load items + course + instructor so the listener can use them
-            $order->load('orderItems.course.instructor');
-
-            // Fire event → SendEmailToInstructor listener will send the email
-            event(new CoursePurchased($order));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Checkout successful',
-                'order'   => $order,
+                'clientSecret' => $paymentIntent->client_secret
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Checkout error: ' . $e->getMessage());
+            Log::error('Stripe PaymentIntent error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Checkout failed. Please try again later.'
+                'message' => 'Failed to initialize payment. Please try again later.'
             ], 500);
         }
     }
