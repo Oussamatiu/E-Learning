@@ -1,22 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { clearCart } from '../utils/cartUtils';
+import api from '../services/api';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('processing');
 
-  useEffect(() => {
-    const paymentIntentStatus = searchParams.get('redirect_status');
+useEffect(() => {
+  const sessionId = searchParams.get('session_id');
 
-    if (paymentIntentStatus === 'succeeded') {
-      setStatus('success');
-      clearCart();
-    } else {
+  const check = async () => {
+    try {
+      const res = await api.get(`/payment/status?session_id=${sessionId}`);
+
+      if (res.data.success) {
+        setStatus('success');
+        clearCart();
+      } else {
+        setStatus('failed');
+      }
+    } catch {
       setStatus('failed');
     }
-  }, [searchParams]);
+  };
+
+  check();
+}, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

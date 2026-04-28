@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
-const CheckoutForm = ({ total }) => {
+const CheckoutForm = ({ total, clientSecret, onSuccess, onError }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -12,15 +12,29 @@ const CheckoutForm = ({ total }) => {
     if (!stripe || !elements) return;
 
     setLoading(true);
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: "http://localhost:5173/success",
-      },
-    });
+    setError(null);
 
-    if (error) setError(error.message);
-    setLoading(false);
+    try {
+      const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/payment-success`,
+        },
+        redirect: 'if_required',
+      });
+
+      if (stripeError) {
+        setError(stripeError.message);
+        onError?.(stripeError.message);
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        onSuccess?.(paymentIntent);
+      }
+    } catch (err) {
+      setError(err.message);
+      onError?.(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,7 +42,12 @@ const CheckoutForm = ({ total }) => {
       <div className="mb-8">
         <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Complete Your Payment</h3>
         <div className="p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
-          <PaymentElement />
+          <PaymentElement options={{
+            layout: {
+              type: 'tabs',
+              defaultCollapsed: false,
+            }
+          }} />
         </div>
         {error && (
           <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
@@ -37,8 +56,8 @@ const CheckoutForm = ({ total }) => {
         )}
       </div>
 
-      <button 
-        disabled={loading || !stripe} 
+      <button
+        disabled={loading || !stripe}
         className="w-full py-4 bg-gradient-to-r from-[#592b98] to-[#7c3aed] text-white font-bold rounded-2xl shadow-md hover:shadow-xl transition-all disabled:opacity-50"
       >
         {loading ? (
@@ -51,7 +70,7 @@ const CheckoutForm = ({ total }) => {
           </span>
         ) : `Pay $${total.toFixed(2)} Now`}
       </button>
-      
+
       <p className="mt-4 text-center text-xs text-gray-400">
         🔒 Secured by Stripe. Your data is encrypted.
       </p>

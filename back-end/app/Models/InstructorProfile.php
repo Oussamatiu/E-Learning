@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class InstructorProfile extends Model
 {
@@ -18,6 +19,13 @@ class InstructorProfile extends Model
         'linkedin_url',
         'avatar',
     ];
+
+    protected $appends = ['avatar_url'];
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar ? url(Storage::disk('public')->url($this->avatar)) : null;
+    }
 
     public function user()
     {

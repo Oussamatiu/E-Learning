@@ -1,12 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect ,useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCart, getCartTotal } from '../utils/cartUtils';
 import api from '../services/api';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
-import CheckoutForm from '../components/payment/CheckoutForm';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -25,8 +20,8 @@ const CheckoutPage = () => {
 
     const initializePayment = async () => {
       try {
-        const res = await api.post('api/orders/checkout', {
-          courses: cartItems.map(i => ({ id: i.id }))
+        const res = await api.post('orders/checkout', {
+         course_ids: cartItems.map(i => i.id)
         });
         setClientSecret(res.data.clientSecret);
       } catch (err) {
@@ -61,8 +56,26 @@ const CheckoutPage = () => {
                 </div>
               ) : clientSecret ? (
                 // إظهار نموذج الدفع فور توفر الـ clientSecret
-                <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  <CheckoutForm total={total} />
+                <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
+                  <CheckoutForm
+                    total={total}
+                    onSuccess={(paymentIntent) => {
+                      // Clear cart on successful payment
+                      localStorage.removeItem('elearning_cart');
+                      // Redirect to success page
+                      navigate('/payment-success', {
+                        state: {
+                          paymentId: paymentIntent.id,
+                          amount: paymentIntent.amount / 100,
+                          courses: cartItems
+                        }
+                      });
+                    }}
+                    onError={(error) => {
+                      console.error('Payment error:', error);
+                      alert(`Payment failed: ${error}`);
+                    }}
+                  />
                 </Elements>
               ) : (
                 <div className="text-center text-red-500">

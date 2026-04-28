@@ -8,6 +8,7 @@ use App\Http\Controllers\LessonController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\OutcomeController;
 use App\Http\Controllers\Api\CourseController as ApiCourseController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -31,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Checkout
     Route::post('/orders/checkout', [\App\Http\Controllers\OrderController::class, 'checkout']);
+    Route::get('/orders/verify/{paymentIntentId}', [\App\Http\Controllers\OrderController::class, 'verifyPayment']);
 
     // Student Enrollments
     Route::get('/student/enrollments', [\App\Http\Controllers\EnrollmentController::class, 'index']);
@@ -61,3 +63,4 @@ Route::delete('/courses/{courseId}/outcomes/{outcomeId}', [OutcomeController::cl
 
 // Stripe Webhook (Must be public, signature verified inside)
 Route::post('/webhook/stripe', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook']);
+Route::get('/payment/status', [OrderController::class, 'paymentStatus'])->middleware('auth:sanctum');

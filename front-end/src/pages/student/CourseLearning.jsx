@@ -14,14 +14,14 @@ const CourseLearning = () => {
   const [selectedLesson, setSelectedLesson]     = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Progress state
+
   const [completedLessons, setCompletedLessons] = useState(new Set());
   const [progress, setProgress]       = useState(0);
   const [totalLessons, setTotalLessons] = useState(0);
   const [togglingLesson, setTogglingLesson] = useState(null);
-  const [accessDenied, setAccessDenied] = useState(false); // enrollment gate
+  const [accessDenied, setAccessDenied] = useState(false); 
 
-  // Load course + sections
+
   useEffect(() => {
     const loadCourse = async () => {
       setLoading(true);
@@ -30,7 +30,6 @@ const CourseLearning = () => {
         const courseData = await getCourse(id);
         const course = courseData.data || courseData;
 
-        // Backend decides access — frontend just reacts
         if (course.is_enrolled !== true) {
           setAccessDenied(true);
           setLoading(false);
@@ -81,7 +80,7 @@ const CourseLearning = () => {
         setProgress(data.progress);
         if (data.total_lessons) setTotalLessons(data.total_lessons);
       } catch (e) {
-        // Not enrolled or error — silently ignore, progress stays at 0
+     
       }
     };
     loadProgress();
@@ -96,7 +95,7 @@ const CourseLearning = () => {
     if (togglingLesson) return;
     setTogglingLesson(lessonId);
     try {
-      const res = await api.post(`api/courses/${id}/lessons/${lessonId}/progress`);
+      const res = await api.post(`courses/${id}/lessons/${lessonId}/progress`);
       const data = res.data;
       setCompletedLessons(prev => {
         const next = new Set(prev);

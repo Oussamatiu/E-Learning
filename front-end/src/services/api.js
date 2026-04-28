@@ -107,10 +107,16 @@ export const apiService = {
   // Settings
   instructor: {
     getProfile: () => api.get('/instructor/profile'),
-    updateProfile: (data) => api.put('/instructor/profile', data),
+    updateProfile: (data) => api.post('/instructor/profile', data),
     updatePassword: (data) => api.put('/instructor/password', data),
     getPayoutSettings: () => api.get('/instructor/payout-settings'),
     updatePayoutSettings: (data) => api.put('/instructor/payout-settings', data),
+  },
+
+  // Payment & Orders
+  payment: {
+    checkout: (data) => api.post('/orders/checkout', data),
+    verify: (paymentIntentId) => api.get(`/orders/verify/${paymentIntentId}`),
   },
 };
 

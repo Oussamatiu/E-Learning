@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import { apiService } from '../../services/api';
 
 const STEPS = ['Welcome', 'About You', 'Links'];
 
@@ -8,9 +8,11 @@ const InstructorSetupProfile = () => {
   const navigate = useNavigate();
   const [step, setStep]                     = useState(0);
   const [saving, setSaving]                 = useState(false);
+  const [loading, setLoading]               = useState(true);
   const [done, setDone]                     = useState(false);
   const [avatarPreview, setAvatarPreview]   = useState(null);
   const [error, setError]                   = useState('');
+  const [isEdit, setIsEdit]                 = useState(false);
   const [form, setForm] = useState({
     headline:     '',
     bio:          '',
@@ -25,12 +27,39 @@ const InstructorSetupProfile = () => {
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'IN';
 
-  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  // Fetch existing profile on mount
+  useEffect(() => {
+    apiService.instructor.getProfile()
+      .then(res => {
+        const profile = res.data?.profile;
+        if (profile) {
+          setForm({
+            headline:     profile.headline     || '',
+            bio:            profile.bio          || '',
+            expertise:      profile.expertise    || '',
+            website:        profile.website      || '',
+            linkedin_url:   profile.linkedin_url || '',
+            avatar:         null,
+          });
+          if (profile.avatar_url) {
+            setAvatarPreview(profile.avatar_url);
+          }
+          setIsEdit(true);
+          setStep(1); // skip welcome for existing profiles
+        }
+      })
+      .catch(() => {
+        // ignore errors — treat as empty profile
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const setField = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
   const handleAvatar = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    set('avatar', file);
+    setField('avatar', file);
     setAvatarPreview(URL.createObjectURL(file));
   };
 
@@ -39,10 +68,15 @@ const InstructorSetupProfile = () => {
     setSaving(true);
     try {
       const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => { if (v) fd.append(k, v); });
-      await api.post('api/instructor/profile', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // Always send text fields (including empty strings) so they can be cleared
+      ['headline', 'bio', 'expertise', 'website', 'linkedin_url'].forEach(key => {
+        fd.append(key, form[key] ?? '');
       });
+      // Only send avatar if a new file was selected
+      if (form.avatar instanceof File) {
+        fd.append('avatar', form.avatar);
+      }
+      await apiService.instructor.updateProfile(fd);
       setDone(true);
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to save profile. Please try again.');
@@ -51,11 +85,17 @@ const InstructorSetupProfile = () => {
     }
   };
 
-  /* ── Input class matching project style ── */
   const inputCls = 'w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent text-sm';
   const labelCls = 'block text-sm font-medium text-gray-700 mb-2';
 
-  /* ── Done screen ── */
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#592b98] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (done) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
@@ -70,7 +110,9 @@ const InstructorSetupProfile = () => {
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Profile saved!</h1>
             <p className="text-gray-600 text-sm mb-8">
-              Your instructor profile is ready. Start creating your first course and share your knowledge with the world.
+              {isEdit
+                ? 'Your instructor profile has been updated successfully.'
+                : 'Your instructor profile is ready. Start creating your first course and share your knowledge with the world.'}
             </p>
             <button
               onClick={() => navigate('/instructor/dashboard')}
@@ -96,7 +138,7 @@ const InstructorSetupProfile = () => {
             </p>
             <h1 className="mt-4 text-2xl font-bold text-gray-900">
               {step === 0 && `Welcome, ${user.name?.split(' ')[0] || 'Instructor'}!`}
-              {step === 1 && 'Tell students about yourself'}
+              {step === 1 && (isEdit ? 'Update your profile' : 'Tell students about yourself')}
               {step === 2 && 'Add your links'}
             </h1>
             <p className="mt-2 text-sm text-gray-600">
@@ -188,7 +230,7 @@ const InstructorSetupProfile = () => {
                   <input
                     type="text"
                     value={form.headline}
-                    onChange={e => set('headline', e.target.value)}
+                    onChange={e => setField('headline', e.target.value)}
                     placeholder="e.g. Full Stack Developer & Web Instructor"
                     className={inputCls}
                   />
@@ -199,7 +241,7 @@ const InstructorSetupProfile = () => {
                   <input
                     type="text"
                     value={form.expertise}
-                    onChange={e => set('expertise', e.target.value)}
+                    onChange={e => setField('expertise', e.target.value)}
                     placeholder="e.g. JavaScript, React, Node.js"
                     className={inputCls}
                   />
@@ -210,7 +252,7 @@ const InstructorSetupProfile = () => {
                   <textarea
                     rows={4}
                     value={form.bio}
-                    onChange={e => set('bio', e.target.value)}
+                    onChange={e => setField('bio', e.target.value)}
                     placeholder="Tell students about your background and teaching style..."
                     className={inputCls + ' resize-none'}
                   />
@@ -226,7 +268,7 @@ const InstructorSetupProfile = () => {
                   <input
                     type="url"
                     value={form.website}
-                    onChange={e => set('website', e.target.value)}
+                    onChange={e => setField('website', e.target.value)}
                     placeholder="https://yourwebsite.com"
                     className={inputCls}
                   />
@@ -237,7 +279,7 @@ const InstructorSetupProfile = () => {
                   <input
                     type="url"
                     value={form.linkedin_url}
-                    onChange={e => set('linkedin_url', e.target.value)}
+                    onChange={e => setField('linkedin_url', e.target.value)}
                     placeholder="https://linkedin.com/in/yourname"
                     className={inputCls}
                   />
@@ -274,7 +316,7 @@ const InstructorSetupProfile = () => {
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Saving...
                     </>
-                  ) : 'Save Profile'}
+                  ) : (isEdit ? 'Update Profile' : 'Save Profile')}
                 </button>
               )}
             </div>
