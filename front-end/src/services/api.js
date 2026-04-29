@@ -113,6 +113,21 @@ export const apiService = {
     updatePayoutSettings: (data) => api.put('/instructor/payout-settings', data),
   },
 
+  // User
+  user: {
+    getMe: () => api.get('/user'),
+    updateMe: (data) => api.put('/user', data),
+  },
+
+  // Comments & Ratings
+  comments: {
+    getAll: (courseId, page = 1) => api.get(`/courses/${courseId}/comments?page=${page}`),
+    create: (courseId, data) => api.post(`/courses/${courseId}/comments`, data),
+  },
+  ratings: {
+    rate: (courseId, rating) => api.post(`/courses/${courseId}/rate`, { rating }),
+  },
+
   // Payment & Orders
   payment: {
     checkout: (data) => api.post('/orders/checkout', data),

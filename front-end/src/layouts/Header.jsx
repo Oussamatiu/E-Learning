@@ -190,7 +190,7 @@ const Header = () => {
                       {/* Profile — instructors only */}
                       {isInstructor && (
                         <button
-                          onClick={() => { navigate('/instructor/setup-profile'); setShowDropdown(false); }}
+                          onClick={() => { navigate('/profile'); setShowDropdown(false); }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#592b98] transition-colors text-left"
                         >
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

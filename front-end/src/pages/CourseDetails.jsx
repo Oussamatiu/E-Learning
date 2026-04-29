@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getCourse } from '../services/coursesService';
 import { getSections } from '../services/sectionsService';
 import { addToCart, isInCart } from '../utils/cartUtils';
-import api from '../services/api';
+import api, { apiService } from '../services/api';
 
 const CourseDetails = () => {
   const { id } = useParams();
@@ -17,7 +17,18 @@ const CourseDetails = () => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isBuyingNow, setIsBuyingNow] = useState(false);
   const [cartStatus, setCartStatus] = useState('');
-  const [isEnrolled, setIsEnrolled] = useState(false); // ← from backend only
+  const [isEnrolled, setIsEnrolled] = useState(false);
+
+  const [comments, setComments] = useState([]);
+  const [commentsMeta, setCommentsMeta] = useState({ current_page: 1, last_page: 1 });
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [commentError, setCommentError] = useState('');
+  const [ratingSuccess, setRatingSuccess] = useState('');
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -56,6 +67,56 @@ const CourseDetails = () => {
       setCartStatus(isInCart(course.id) ? 'in-cart' : '');
     }
   }, [course]);
+
+  // Fetch comments when reviews tab is active
+  useEffect(() => {
+    if (activeTab !== 'reviews' || !id) return;
+    const fetchComments = async () => {
+      setCommentsLoading(true);
+      try {
+        const res = await apiService.comments.getAll(id, commentsMeta.current_page);
+        setComments(res.data?.data || []);
+        setCommentsMeta(res.data?.meta || { current_page: 1, last_page: 1 });
+      } catch (e) {
+        console.error('Failed to load comments', e);
+      } finally {
+        setCommentsLoading(false);
+      }
+    };
+    fetchComments();
+  }, [activeTab, id, commentsMeta.current_page]);
+
+  const handlePostComment = async () => {
+    if (!newComment.trim()) return;
+    setPostingComment(true);
+    setCommentError('');
+    try {
+      const res = await apiService.comments.create(id, { content: newComment.trim() });
+      setComments(prev => [res.data?.comment, ...prev].filter(Boolean));
+      setNewComment('');
+    } catch (e) {
+      setCommentError(e.response?.data?.message || 'Failed to post comment');
+    } finally {
+      setPostingComment(false);
+    }
+  };
+
+  const handleRate = async (rating) => {
+    if (!isEnrolled || ratingLoading) return;
+    setRatingLoading(true);
+    setRatingSuccess('');
+    try {
+      const res = await apiService.ratings.rate(id, rating);
+      setUserRating(rating);
+      setRatingSuccess(res.data?.message || 'Rating saved!');
+      // Optimistically update course rating
+      setCourse(prev => prev ? { ...prev, rating: res.data?.average ?? prev.rating, reviews: res.data?.total_count ?? prev.reviews } : prev);
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to save rating');
+    } finally {
+      setRatingLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -168,20 +229,7 @@ const CourseDetails = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-200 py-3 sticky top-0 bg-white z-40">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#592b98] rounded flex items-center justify-center text-white font-bold text-base">L</div>
-            <span className="text-lg font-bold text-gray-900 hidden sm:block">LearnTrack</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <button className="text-gray-600 hover:text-gray-900 text-sm font-medium">Share</button>
-            <button className="text-gray-600 hover:text-gray-900 text-sm font-medium">Gift this course</button>
-            <button className="text-gray-600 hover:text-gray-900 text-sm font-medium">Apply now</button>
-          </div>
-        </div>
-      </header>
+   
 
       {/* Course Banner */}
       <section className="bg-gray-900 py-8">
@@ -255,7 +303,7 @@ const CourseDetails = () => {
             {/* Tabs */}
             <div>
               <div className="flex gap-8 border-b border-gray-200 mb-6">
-                {['overview', 'curriculum', 'instructor'].map(tab => (
+                {['overview', 'curriculum', 'instructor', 'reviews'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -326,8 +374,11 @@ const CourseDetails = () => {
                     <div className="w-24 h-24 rounded-full overflow-hidden flex-shrink-0">
                       <img src={course.instructor.avatar} alt={course.instructor.name} className="w-full h-full object-cover" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-lg font-bold text-gray-900">{course.instructor.name}</h3>
+                      {course.instructor.headline && (
+                        <p className="text-sm text-[#592b98] font-medium mb-1">{course.instructor.headline}</p>
+                      )}
                       <p className="text-gray-500 text-sm mb-3">{course.instructor.role}</p>
                       <div className="flex gap-6 mb-4">
                         <div>
@@ -339,8 +390,176 @@ const CourseDetails = () => {
                           <span className="text-gray-500 text-xs">Students</span>
                         </div>
                       </div>
-                      <p className="text-gray-600 text-sm leading-relaxed">{course.instructor.bio}</p>
+                      {course.instructor.expertise && (
+                        <p className="text-xs text-gray-500 mb-3">
+                          <span className="font-semibold text-gray-700">Expertise:</span> {course.instructor.expertise}
+                        </p>
+                      )}
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4">{course.instructor.bio}</p>
+                      <div className="flex flex-wrap gap-3">
+                        {course.instructor.website && (
+                          <a
+                            href={course.instructor.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm text-[#592b98] hover:underline"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                            </svg>
+                            Website
+                          </a>
+                        )}
+                        {course.instructor.linkedin_url && (
+                          <a
+                            href={course.instructor.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm text-[#592b98] hover:underline"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                            </svg>
+                            LinkedIn
+                          </a>
+                        )}
+                      </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <div className="space-y-6">
+                  {/* Rating summary */}
+                  <div className="border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center gap-6">
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-gray-900">{(Number(course.rating) || 0).toFixed(1)}</div>
+                        <div className="flex justify-center mt-1">{renderStars(course.rating || 0)}</div>
+                        <div className="text-xs text-gray-500 mt-1">{course.reviews || 0} reviews</div>
+                      </div>
+                      <div className="flex-1">
+                        {isEnrolled && (
+                          <div className="mb-3">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Rate this course</p>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  onClick={() => handleRate(star)}
+                                  onMouseEnter={() => setHoverRating(star)}
+                                  onMouseLeave={() => setHoverRating(0)}
+                                  disabled={ratingLoading}
+                                  className="p-0.5 transition-transform hover:scale-110 disabled:opacity-50"
+                                >
+                                  <svg
+                                    className={`w-8 h-8 ${
+                                      star <= (hoverRating || userRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                    }`}
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                </button>
+                              ))}
+                            </div>
+                            {ratingSuccess && <p className="text-xs text-green-600 mt-1">{ratingSuccess}</p>}
+                          </div>
+                        )}
+                        {!isEnrolled && (
+                          <p className="text-sm text-gray-500">Enroll in this course to leave a rating and review.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comment form */}
+                  {isEnrolled && (
+                    <div className="border border-gray-200 rounded-lg p-6">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Write a review</h3>
+                      {commentError && <p className="text-xs text-red-600 mb-2">{commentError}</p>}
+                      <textarea
+                        rows={3}
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Share your experience with this course..."
+                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#592b98] focus:border-transparent text-sm resize-none"
+                        maxLength={2000}
+                      />
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-xs text-gray-400">{newComment.length}/2000</span>
+                        <button
+                          onClick={handlePostComment}
+                          disabled={postingComment || !newComment.trim()}
+                          className="bg-[#592b98] text-white text-sm font-semibold px-5 py-2 rounded-md hover:bg-[#3e1f6b] transition-colors disabled:opacity-50"
+                        >
+                          {postingComment ? 'Posting...' : 'Post Review'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Comments list */}
+                  <div className="space-y-4">
+                    {commentsLoading && comments.length === 0 && (
+                      <div className="flex justify-center py-8">
+                        <div className="w-6 h-6 border-2 border-[#592b98] border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+
+                    {!commentsLoading && comments.length === 0 && (
+                      <div className="text-center py-8 text-gray-500 text-sm">No reviews yet. Be the first to review!</div>
+                    )}
+
+                    {comments.map((comment) => (
+                      <div key={comment.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#592b98] to-[#9b6cd9] flex items-center justify-center text-white text-xs font-bold">
+                            {comment.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-900">{comment.user?.name || 'Anonymous'}</p>
+                            {comment.user_rating > 0 && (
+                              <div className="flex items-center gap-0.5 mt-0.5">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <svg
+                                    key={s}
+                                    className={`w-3.5 h-3.5 ${s <= comment.user_rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                ))}
+                              </div>
+                            )}
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {comment.created_at ? new Date(comment.created_at).toLocaleDateString() : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
+                      </div>
+                    ))}
+
+                    {/* Pagination */}
+                    {commentsMeta.last_page > 1 && (
+                      <div className="flex justify-center gap-2 pt-4">
+                        {Array.from({ length: commentsMeta.last_page }, (_, i) => i + 1).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCommentsMeta(prev => ({ ...prev, current_page: page }))}
+                            className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
+                              page === commentsMeta.current_page
+                                ? 'bg-[#592b98] text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -363,7 +582,8 @@ const CourseDetails = () => {
 
               <div className="p-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl font-bold text-gray-900">{course.price}</span>
+                  <span className="text-2xl font-bold text-gray-900">{course.price}$
+                  </span>
                   <span className="text-gray-400 line-through text-sm">{course.oldPrice}</span>
                   <span className="text-green-600 text-sm font-semibold">45% OFF</span>
                 </div>

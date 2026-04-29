@@ -18,6 +18,7 @@ import CreateCourse from './pages/instructor/pages/CreateCourse'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentSuccess from './pages/PaymentSuccess'
+import ProfilePage from './pages/ProfilePage'
 import Wallet from './pages/instructor/pages/Wallet'
 import InstructorSetupProfile from './pages/instructor/InstructorSetupProfile'
 import StudentLayout from './pages/student/StudentLayout'
@@ -66,6 +67,7 @@ function App() {
     </Route>
 
    
+    <Route path="/profile" element={<ProfilePage />} />
     <Route path="/instructor/setup-profile" element={<InstructorSetupProfile />} />
   </Routes>
 </BrowserRouter>

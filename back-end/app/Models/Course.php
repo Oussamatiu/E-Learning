@@ -71,6 +71,16 @@ class Course extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
     // Helper methods
     public function getLevelBadge(): string
     {

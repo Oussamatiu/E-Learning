@@ -27,8 +27,8 @@ class CourseResource extends JsonResource
             'duration' => $this->duration ? $this->formatDuration($this->duration) : '0h 0m',
             'students' => $this->students_count ?? 0,
             'students_count' => $this->students_count ?? 0,
-            'rating' => $this->rating ?? 4.5,
-            'reviews' => $this->reviews_count ?? 120,
+            'rating' => $this->rating ?? 0,
+            'reviews' => $this->ratings_count ?? 0,
             'category' => $this->category ? ['id' => $this->category->id, 'name' => $this->category->name] : null,
 
             'instructor' => $this->whenLoaded('instructor', function () {
@@ -40,6 +40,10 @@ class CourseResource extends JsonResource
                     'role' => 'Instructor',
                     'avatar' => $profile?->avatar ? asset('storage/' . $profile->avatar) : ('https://ui-avatars.com/api/?name=' . urlencode($user?->name ?? 'User')),
                     'bio' => $profile?->bio ?? '',
+                    'headline' => $profile?->headline ?? '',
+                    'expertise' => $profile?->expertise ?? '',
+                    'website' => $profile?->website ?? '',
+                    'linkedin_url' => $profile?->linkedin_url ?? '',
                     'courses' => $user?->courses()->count() ?? 0,
                     'students' => $user?->courses()->sum('students_count') ?? 0,
                 ];

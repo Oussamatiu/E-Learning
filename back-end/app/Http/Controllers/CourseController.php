@@ -196,7 +196,7 @@ class CourseController extends Controller
                 'category',
                 'outcomes',
                 'sections.lessons',
-            ])->findOrFail($id);
+            ])->withCount('ratings')->findOrFail($id);
 
             $isEnrolled = false;
             $user = $request->user('sanctum'); // optional auth — won't throw if unauthenticated

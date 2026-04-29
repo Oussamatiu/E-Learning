@@ -22,6 +22,9 @@ Route::get('/instructor/wallet', [\App\Http\Controllers\WalletController::class,
 Route::post('/courses/{id}/publish', [CourseController::class, 'publish'])->middleware('auth:sanctum');
 Route::post('/courses/structure', [CourseStructureController::class, 'store'])->middleware('auth:sanctum');
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [AuthController::class, 'me']);
+    Route::put('/user', [AuthController::class, 'update']);
+
     Route::post('/courses', [ApiCourseController::class, 'store']);
     Route::put('/courses/{course}', [ApiCourseController::class, 'update']);
     Route::post('/courses/{id}/update', [CourseController::class, 'update']); // FormData update (edit page)
@@ -44,8 +47,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Course Progress (student) — enrollment required
     Route::get('/courses/{courseId}/progress', [\App\Http\Controllers\ProgressController::class, 'index'])->middleware('enrolled');
     Route::post('/courses/{courseId}/lessons/{lessonId}/progress', [\App\Http\Controllers\ProgressController::class, 'toggle'])->middleware('enrolled');
+
+    // Comments & Ratings (enrollment checked inside controllers)
+    Route::post('/courses/{courseId}/comments', [\App\Http\Controllers\CommentController::class, 'store']);
+    Route::post('/courses/{courseId}/rate', [\App\Http\Controllers\RatingController::class, 'rate']);
 });
     Route::get('/courses/{id}', [CourseController::class, 'show']); // public but injects is_enrolled
+    Route::get('/courses/{courseId}/comments', [\App\Http\Controllers\CommentController::class, 'index']);
 
 // categories is public
 Route::get('/categories', [CategorieController::class, 'index']);
