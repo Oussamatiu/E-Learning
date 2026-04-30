@@ -184,40 +184,41 @@ class CourseController extends Controller
     }
 }
 
-    /**
-     * GET /api/courses/{id}
-     * Public — but injects is_enrolled=true/false for authenticated users.
-     */
-    public function show(Request $request, string $id)
-    {
-        try {
-            $course = Course::with([
-                'instructor.instructorProfile',
-                'category',
-                'outcomes',
-                'sections.lessons',
-            ])->withCount('ratings')->findOrFail($id);
+   public function show(Request $request, string $id)
+{
+    try {
+        $course = Course::with([
+            'instructor.instructorProfile',
+            'category',
+            'outcomes',
+            'sections.lessons',
+        ])->withCount('ratings')->findOrFail($id);
 
-            $isEnrolled = false;
-            $user = $request->user('sanctum'); // optional auth — won't throw if unauthenticated
+        $isEnrolled = false;
+        $user = $request->user('sanctum');
 
-            if ($user) {
+        if ($user) {
+            // Admin can see everything without enrollment
+            if ($user->role->title === 'admin') {
+                $isEnrolled = true;
+            } else {
                 $isEnrolled = \App\Models\Enrollment::where('user_id', $user->id)
                     ->where('course_id', $course->id)
                     ->exists();
             }
-
-            $resource = (new CourseResource($course))->toArray($request);
-            $resource['is_enrolled'] = $isEnrolled;
-
-            return response()->json(['data' => $resource], 200);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['message' => 'Course not found'], 404);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Failed to fetch course', 'error' => $e->getMessage()], 500);
         }
+
+        $resource = (new CourseResource($course))->toArray($request);
+        $resource['is_enrolled'] = $isEnrolled;
+
+        return response()->json(['data' => $resource], 200);
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json(['message' => 'Course not found'], 404);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Failed to fetch course', 'error' => $e->getMessage()], 500);
     }
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -262,7 +263,13 @@ class CourseController extends Controller
                 $course->thumbnail = $fileService->upload($request->file('thumbnail_file'), 'thumbnails', 'public');
             }
 
-            $course->fill($request->only(['title', 'description', 'price', 'level', 'status', 'category_id', 'duration', 'students_count', 'rating']));
+            // Instructors cannot publish directly — only admins can approve
+            $fields = $request->only(['title', 'description', 'price', 'level', 'status', 'category_id', 'duration', 'students_count', 'rating']);
+            if (isset($fields['status']) && $fields['status'] === 'published' && $course->status !== 'published') {
+                unset($fields['status']);
+            }
+
+            $course->fill($fields);
             $course->save();
 
             // Update outcomes if provided
@@ -371,7 +378,8 @@ class CourseController extends Controller
 
     /**
      * POST /api/courses/{id}/publish
-     * Toggle course status between draft ↔ published.
+     * Instructors submit for review (draft/rejected → pending_review).
+     * Instructors can unpublish (published → draft).
      */
     public function publish(Request $request, $id)
     {
@@ -382,13 +390,21 @@ class CourseController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $newStatus      = $course->status === 'published' ? 'draft' : 'published';
-        $course->status = $newStatus;
+        if ($course->status === 'published') {
+            $course->status = 'draft';
+            $message = 'Course moved to draft.';
+        } elseif (in_array($course->status, ['draft', 'rejected'])) {
+            $course->status = 'pending_review';
+            $message = 'Course submitted for admin review.';
+        } else {
+            return response()->json(['message' => 'Invalid status transition'], 400);
+        }
+
         $course->save();
 
         return response()->json([
-            'message' => $newStatus === 'published' ? 'Course published!' : 'Course moved to draft.',
-            'status'  => $newStatus,
+            'message' => $message,
+            'status'  => $course->status,
         ]);
     }
 }

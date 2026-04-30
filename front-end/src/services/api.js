@@ -128,6 +128,18 @@ export const apiService = {
     rate: (courseId, rating) => api.post(`/courses/${courseId}/rate`, { rating }),
   },
 
+  // Admin
+  admin: {
+    getDashboard: () => api.get('/admin/dashboard'),
+    getCourses: (status) => api.get(`/admin/courses${status ? `?status=${status}` : ''}`),
+    approveCourse: (id) => api.post(`/admin/courses/${id}/approve`),
+    rejectCourse: (id) => api.post(`/admin/courses/${id}/reject`),
+    deleteCourse: (id) => api.delete(`/admin/courses/${id}`),
+    getUsers: () => api.get('/admin/users'),
+    toggleUser: (id) => api.post(`/admin/users/${id}/toggle`),
+    getPayments: () => api.get('/admin/payments'),
+  },
+
   // Payment & Orders
   payment: {
     checkout: (data) => api.post('/orders/checkout', data),

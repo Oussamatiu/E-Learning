@@ -10,7 +10,7 @@ const Step4_Review = ({ state, loading, onSubmit, onBack, courseId }) => {
         <p className="text-sm text-gray-500">
           {courseId
             ? 'Your course structure is ready. Review the details below before finalizing.'
-            : 'Review your course details before publishing.'}
+            : 'Review your course details before submitting for admin approval.'}
         </p>
       </div>
 
@@ -132,7 +132,7 @@ const Step4_Review = ({ state, loading, onSubmit, onBack, courseId }) => {
           disabled={loading}
           className="px-8 py-2.5 bg-[#592b98] text-white rounded-xl font-bold text-sm hover:bg-[#3e1f6b] disabled:opacity-50 transition-colors shadow-sm"
         >
-          {loading ? 'Processing...' : (courseId ? 'Finalize & View Courses' : 'Publish Course')}
+          {loading ? 'Processing...' : (courseId ? 'Finalize & View Courses' : 'Submit for Admin Review')}
         </button>
       </div>
     </div>

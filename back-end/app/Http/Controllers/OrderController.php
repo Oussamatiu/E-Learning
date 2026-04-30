@@ -93,30 +93,39 @@ class OrderController extends Controller
             ], 500);
         }
     }
-   public function paymentStatus(Request $request)
-{
-    try {
-        $user = $request->user();
-        $sessionId = $request->query('session_id');
+    public function paymentStatus(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $sessionId = $request->query('session_id');
 
-        if (!$sessionId) {
-            return response()->json(['success' => false]);
+            if (!$sessionId) {
+                return response()->json(['success' => false, 'message' => 'Missing session_id'], 400);
+            }
+
+            \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+            $session = \Stripe\Checkout\Session::retrieve($sessionId);
+
+            // Verify the session belongs to the authenticated user
+            $sessionUserId = $session->metadata->user_id ?? null;
+            if ($sessionUserId && (int) $sessionUserId !== $user->id) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            $isPaid = $session->payment_status === 'paid';
+
+            return response()->json([
+                'success' => $isPaid,
+                'status'  => $session->payment_status,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Payment status check failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to verify payment status'
+            ], 500);
         }
-
-        $order = Order::where('stripe_session_id', $sessionId)
-            ->where('user_id', $user->id)
-            ->first();
-
-        return response()->json([
-            'success' => $order && $order->status === 'completed'
-        ]);
-
-    } catch (\Exception $e) {
-        Log::error($e->getMessage());
-
-        return response()->json([
-            'success' => false
-        ], 500);
     }
-}
 }

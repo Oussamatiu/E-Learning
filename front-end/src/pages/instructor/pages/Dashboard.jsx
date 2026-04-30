@@ -17,7 +17,9 @@ const Dashboard = () => {
   const stats = {
     total: courses.length,
     published: courses.filter(c => c.status === 'published').length,
-    drafts: courses.filter(c => c.status === 'draft').length,
+    pending: courses.filter(c => c.status === 'pending_review').length,
+    rejected: courses.filter(c => c.status === 'rejected').length,
+    draft: courses.filter(c => c.status === 'draft').length,
     students: courses.reduce((sum, c) => sum + (c.students_count || 0), 0),
   };
 
@@ -67,7 +69,7 @@ const Dashboard = () => {
       <div className="px-8 py-6 space-y-6">
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           <StatCard
             label="Total Courses"
             value={stats.total}
@@ -91,10 +93,32 @@ const Dashboard = () => {
             }
           />
           <StatCard
-            label="Drafts"
-            value={stats.drafts}
+            label="Pending Review"
+            value={stats.pending}
             bg="bg-orange-50"
             textColor="text-orange-500"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Rejected"
+            value={stats.rejected}
+            bg="bg-red-50"
+            textColor="text-red-500"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Drafts"
+            value={stats.draft}
+            bg="bg-gray-50"
+            textColor="text-gray-500"
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -171,9 +195,13 @@ const Dashboard = () => {
                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
                       course.status === 'published'
                         ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-500'
+                        : course.status === 'rejected'
+                        ? 'bg-red-100 text-red-700'
+                        : course.status === 'pending_review'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-yellow-100 text-yellow-700'
                     }`}>
-                      {course.status}
+                      {course.status === 'pending_review' ? 'Pending Review' : course.status}
                     </span>
                     <Link
                       to={`/instructor/edit-course/${course.id}`}

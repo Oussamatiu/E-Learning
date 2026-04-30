@@ -29,9 +29,13 @@ const Login = () => {
       const isInstructor =
         data.user?.role_id === 2 ||
         data.user?.role?.title === 'instructor';
+      const isAdmin =
+        data.user?.role_id === 3 ||
+        data.user?.role?.title === 'admin';
 
-      // If they came from email verification as instructor → go to profile setup
-      if (isInstructor && setupMode) {
+      if (isAdmin) {
+        navigate('/admin/dashboard');
+      } else if (isInstructor && setupMode) {
         navigate('/instructor/setup-profile');
       } else {
         navigate(isInstructor ? '/instructor/dashboard' : '/student/dashboard');

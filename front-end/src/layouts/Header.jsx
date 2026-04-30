@@ -45,8 +45,9 @@ const Header = () => {
     if (searchQuery.trim()) navigate(`/courses?search=${encodeURIComponent(searchQuery)}`);
   };
 
+  const isAdmin = user?.role_id === 3 || user?.role?.title === 'admin';
   const isInstructor = user?.role_id === 2 || user?.role?.title === 'instructor';
-  const dashboardPath = isInstructor ? '/instructor/dashboard' : '/student/dashboard';
+  const dashboardPath = isAdmin ? '/admin/dashboard' : isInstructor ? '/instructor/dashboard' : '/student/dashboard';
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
@@ -169,9 +170,10 @@ const Header = () => {
                           <p className="text-xs text-gray-400 truncate">{user.email}</p>
                         </div>
                       </div>
-                      <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full ${isInstructor ? 'bg-purple-100 text-[#592b98]' : 'bg-blue-50 text-blue-600'
+                      <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          isAdmin ? 'bg-red-100 text-red-600' : isInstructor ? 'bg-purple-100 text-[#592b98]' : 'bg-blue-50 text-blue-600'
                         }`}>
-                        {isInstructor ? 'Instructor' : 'Student'}
+                        {isAdmin ? 'Admin' : isInstructor ? 'Instructor' : 'Student'}
                       </span>
                     </div>
 
@@ -187,8 +189,8 @@ const Header = () => {
                         Dashboard
                       </button>
 
-                      {/* Profile — instructors only */}
-                      {isInstructor && (
+                      {/* Profile — instructors and admins */}
+                      {(isInstructor || isAdmin) && (
                         <button
                           onClick={() => { navigate('/profile'); setShowDropdown(false); }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#592b98] transition-colors text-left"

@@ -8,7 +8,7 @@ const MyCourses = () => {
   const [loading, setLoading]   = useState(true);
   const [deleting, setDeleting] = useState(null);
   const [publishing, setPublishing] = useState(null);
-  const [filter, setFilter]     = useState('all'); // all | published | draft
+  const [filter, setFilter]     = useState('all'); // all | published | pending_review | rejected | draft
 
   useEffect(() => { loadCourses(); }, []);
 
@@ -40,8 +40,11 @@ const MyCourses = () => {
       setCourses(prev =>
         prev.map(c => c.id === id ? { ...c, status: res.data.status } : c)
       );
+      if (res.data.status === 'pending_review') {
+        alert('Course submitted for admin review. You will be notified once it is approved.');
+      }
     } catch (e) {
-      alert('Failed to toggle status.');
+      alert(e.response?.data?.message || 'Failed to toggle status.');
     } finally {
       setPublishing(null);
     }
@@ -52,9 +55,11 @@ const MyCourses = () => {
   );
 
   const counts = {
-    all:       courses.length,
-    published: courses.filter(c => c.status === 'published').length,
-    draft:     courses.filter(c => c.status === 'draft').length,
+    all:            courses.length,
+    published:      courses.filter(c => c.status === 'published').length,
+    pending_review: courses.filter(c => c.status === 'pending_review').length,
+    rejected:       courses.filter(c => c.status === 'rejected').length,
+    draft:          courses.filter(c => c.status === 'draft').length,
   };
 
   return (
@@ -81,9 +86,11 @@ const MyCourses = () => {
         {/* Filter tabs */}
         <div className="flex items-center gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit">
           {[
-            { key: 'all',       label: 'All' },
-            { key: 'published', label: '🟢 Published' },
-            { key: 'draft',     label: '🟡 Draft' },
+            { key: 'all',            label: 'All' },
+            { key: 'published',      label: '🟢 Published' },
+            { key: 'pending_review', label: '🔵 Pending' },
+            { key: 'rejected',       label: '🔴 Rejected' },
+            { key: 'draft',          label: '🟡 Draft' },
           ].map(tab => (
             <button
               key={tab.key}
@@ -141,9 +148,13 @@ const MyCourses = () => {
                   <span className={`absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm ${
                     course.status === 'published'
                       ? 'bg-green-100 text-green-700'
+                      : course.status === 'rejected'
+                      ? 'bg-red-100 text-red-700'
+                      : course.status === 'pending_review'
+                      ? 'bg-blue-100 text-blue-700'
                       : 'bg-yellow-100 text-yellow-700'
                   }`}>
-                    {course.status === 'published' ? '🟢 Published' : '🟡 Draft'}
+                    {course.status === 'published' ? '🟢 Published' : course.status === 'rejected' ? '🔴 Rejected' : course.status === 'pending_review' ? '🔵 Pending Review' : '🟡 Draft'}
                   </span>
                 </div>
 
@@ -158,34 +169,46 @@ const MyCourses = () => {
 
                   {/* Action Buttons */}
                   <div className="space-y-2">
-                    {/* Publish / Unpublish */}
-                    <button
-                      onClick={() => handlePublish(course.id)}
-                      disabled={publishing === course.id}
-                      className={`w-full py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-60 flex items-center justify-center gap-2 ${
-                        course.status === 'published'
-                          ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200'
-                          : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
-                      }`}
-                    >
-                      {publishing === course.id ? (
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : course.status === 'published' ? (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                          </svg>
-                          Move to Draft
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Publish Course
-                        </>
-                      )}
-                    </button>
+                    {/* Publish / Unpublish / Status */}
+                    {course.status === 'published' ? (
+                      <button
+                        onClick={() => handlePublish(course.id)}
+                        disabled={publishing === course.id}
+                        className="w-full py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-60 flex items-center justify-center gap-2 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200"
+                      >
+                        {publishing === course.id ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                            Move to Draft
+                          </>
+                        )}
+                      </button>
+                    ) : course.status === 'pending_review' ? (
+                      <div className="w-full py-2 rounded-lg text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-200 text-center">
+                        Pending Admin Approval
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handlePublish(course.id)}
+                        disabled={publishing === course.id}
+                        className="w-full py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-60 flex items-center justify-center gap-2 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                      >
+                        {publishing === course.id ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {course.status === 'rejected' ? 'Resubmit for Review' : 'Submit for Review'}
+                          </>
+                        )}
+                      </button>
+                    )}
 
                     {/* Edit + View + Delete */}
                     <div className="flex gap-2">

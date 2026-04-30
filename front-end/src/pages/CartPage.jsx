@@ -37,7 +37,7 @@ const CartPage = () => {
 
   } catch (err) {
     console.error(err);
-    alert(err?.response?.data?.message || "فشل في عملية الدفع");
+    alert(err?.response?.data?.message || "Erors");
   } finally {
     setIsCheckingOut(false);
   }

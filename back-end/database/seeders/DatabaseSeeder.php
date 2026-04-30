@@ -18,23 +18,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create roles
-        $roles = [
-            ['id' => 1, 'title' => 'student', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 2, 'title' => 'instructor', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 3, 'title' => 'admin', 'created_at' => now(), 'updated_at' => now()],
-        ];
-        Role::insert($roles);
-
-        // Create categories
-        $categories = [
-            ['name' => 'Development', 'slug' => 'development', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Business', 'slug' => 'business', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'IT & Software', 'slug' => 'it-software', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Design', 'slug' => 'design', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Marketing', 'slug' => 'marketing', 'created_at' => now(), 'updated_at' => now()],
-        ];
-        Category::insert($categories);
+        
 
         // Create Admin User
         $admin = User::create([

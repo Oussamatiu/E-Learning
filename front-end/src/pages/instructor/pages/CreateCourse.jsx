@@ -63,11 +63,11 @@ const CreateCourse = () => {
         dispatch({ type: 'SET_FIELD', key: 'level',       value: course.level || 'beginner' });
         dispatch({ type: 'SET_FIELD', key: 'status',      value: course.status || 'draft' });
 
-        // category_id — backend may return category as object {id,name}
+       
         const catId = course.category_id ?? course.category?.id ?? '';
         dispatch({ type: 'SET_FIELD', key: 'category_id', value: String(catId) });
 
-        // Existing thumbnail preview (URL, not a File)
+
         if (course.thumbnail) {
           dispatch({
             type: 'SET_THUMBNAIL',
@@ -76,13 +76,12 @@ const CreateCourse = () => {
           });
         }
 
-        // Outcomes
         const outcomes = (course.outcomes || course.learnings || []).map(o =>
           typeof o === 'string' ? o : o.description || ''
         );
         dispatch({ type: 'SET_FIELD', key: 'outcomes', value: outcomes.length ? outcomes : [''] });
 
-        // Sections + lessons — map to internal shape
+  
         const rawSections = course.curriculum || course.sections || [];
         const sections = rawSections.map(section => ({
           tempId: `existing-${section.id}`,
@@ -112,7 +111,7 @@ const CreateCourse = () => {
     load();
   }, [editId, isEditMode]);
 
-  // Save course updates (edit mode)
+
   const updateBaseCourse = async () => {
     const token = localStorage.getItem('token');
     const formData = new FormData();
@@ -127,7 +126,7 @@ const CreateCourse = () => {
       formData.append('thumbnail_file', state.thumbnail);
     }
 
-    // Outcomes
+ 
     const filteredOutcomes = state.outcomes.filter(o => o.trim() !== '');
     filteredOutcomes.forEach(outcome => {
       formData.append('outcomes[]', outcome);
@@ -146,7 +145,7 @@ const CreateCourse = () => {
     return editId;
   };
 
-  // Create course (create mode)
+
   const createBaseCourse = async () => {
     const token = localStorage.getItem('token');
     const formData = new FormData();
@@ -223,7 +222,7 @@ const CreateCourse = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Explicit update button handler (edit mode only)
+
   const handleUpdate = async () => {
     if (!validateStep(currentStep)) return;
     setUpdateSaving(true);
@@ -243,14 +242,14 @@ const CreateCourse = () => {
   const nextStep = async () => {
     if (!validateStep(currentStep)) return;
 
-    // In edit mode: just navigate freely, no API call
+  
     if (isEditMode) {
       setCurrentStep(prev => prev + 1);
       setError('');
       return;
     }
 
-    // Create mode: call API on step 2 to create the course
+
     if (currentStep === 2) {
       setLoading(true);
       try {
@@ -271,7 +270,6 @@ const CreateCourse = () => {
 
   const prevStep = () => setCurrentStep(prev => prev - 1);
 
-  // Section handlers (same for create & edit — use createdCourseId)
   const handleCreateSection = async (title) => {
     if (!createdCourseId) throw new Error('Course not ready yet');
     const token = localStorage.getItem('token');
@@ -356,7 +354,6 @@ const CreateCourse = () => {
         </div>
       </div>
 
-      {/* Progress Steps */}
       <section className="bg-white py-6 px-4 border-b border-gray-200">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
@@ -385,7 +382,7 @@ const CreateCourse = () => {
         </div>
       </section>
 
-      {/* Error */}
+
       {error && (
         <div className="max-w-4xl mx-auto mt-4 px-4">
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
@@ -397,7 +394,6 @@ const CreateCourse = () => {
         </div>
       )}
 
-      {/* Steps Content */}
       <section className="bg-white py-6 sm:py-8 px-2 sm:px-4 mt-6 mx-4 max-w-4xl lg:mx-auto rounded-2xl border border-gray-200 mb-12 shadow-sm relative">
         <div className="space-y-4">
           {currentStep === 1 && <Step1_CourseInfo state={state} dispatch={dispatch} categories={categories} errors={fieldErrors} />}
@@ -423,10 +419,10 @@ const CreateCourse = () => {
             />
           )}
 
-          {/* Navigation */}
+
           {currentStep < 4 && (
             <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-6 gap-3 px-2 sm:px-6">
-              {/* Left: Back */}
+
               {currentStep > 1 ? (
                 <button
                   onClick={prevStep}
@@ -436,9 +432,9 @@ const CreateCourse = () => {
                 </button>
               ) : <div />}
 
-              {/* Right: Update (edit mode) + Next */}
+           
               <div className="flex items-center gap-4">
-                {/* Update button — edit mode, steps 1 & 2 only */}
+       
                 {isEditMode && currentStep <= 2 && (
                   <>
                     {updateSuccess && (
@@ -459,7 +455,6 @@ const CreateCourse = () => {
                   </>
                 )}
 
-                {/* Next / Create */}
                 <button
                   onClick={nextStep}
                   disabled={loading}

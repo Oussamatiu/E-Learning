@@ -10,7 +10,7 @@ const PaymentSuccess = () => {
 
 useEffect(() => {
   const sessionId = searchParams.get('session_id');
-
+ console.log(sessionId);
   const check = async () => {
     try {
       const res = await api.get(`/payment/status?session_id=${sessionId}`);

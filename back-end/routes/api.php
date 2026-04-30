@@ -72,3 +72,15 @@ Route::delete('/courses/{courseId}/outcomes/{outcomeId}', [OutcomeController::cl
 // Stripe Webhook (Must be public, signature verified inside)
 Route::post('/webhook/stripe', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook']);
 Route::get('/payment/status', [OrderController::class, 'paymentStatus'])->middleware('auth:sanctum');
+
+// Admin routes
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/admin/dashboard', [\App\Http\Controllers\AdminController::class, 'dashboard']);
+    Route::get('/admin/courses', [\App\Http\Controllers\AdminController::class, 'courses']);
+    Route::post('/admin/courses/{id}/approve', [\App\Http\Controllers\AdminController::class, 'approveCourse']);
+    Route::post('/admin/courses/{id}/reject', [\App\Http\Controllers\AdminController::class, 'rejectCourse']);
+    Route::delete('/admin/courses/{id}', [\App\Http\Controllers\AdminController::class, 'deleteCourse']);
+    Route::get('/admin/users', [\App\Http\Controllers\AdminController::class, 'users']);
+    Route::post('/admin/users/{id}/toggle', [\App\Http\Controllers\AdminController::class, 'toggleUserStatus']);
+    Route::get('/admin/payments', [\App\Http\Controllers\AdminController::class, 'payments']);
+});

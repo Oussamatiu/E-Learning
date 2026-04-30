@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('price', 8, 2)->nullable();
             $table->integer('duration')->nullable();
             $table->string('thumbnail')->nullable();
-            $table->enum('status', ['draft', 'published'])->default('draft');
+            $table->enum('status', ['draft', 'published', 'pending_review' , 'rejected'])->default('draft');
             $table->enum('level', ['beginner', 'intermediate', 'advanced'])->nullable();
             $table->integer('students_count')->default(0);
             $table->decimal('rating', 3, 2)->default(0);

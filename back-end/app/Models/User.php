@@ -60,17 +60,17 @@ class User extends Authenticatable
     // Role helper methods
     public function isAdmin(): bool
     {
-        return $this->role_id === 1; // Assuming admin role has id 1
+        return $this->role_id === 3; // admin role has id 3
     }
 
     public function isInstructor(): bool
     {
-        return $this->role_id === 2; // Assuming instructor role has id 2
+        return $this->role_id === 2; // instructor role has id 2
     }
 
     public function isStudent(): bool
     {
-        return $this->role_id === 3; // Assuming student role has id 3
+        return $this->role_id === 1; // student role has id 1
     }
 
     // Relationships

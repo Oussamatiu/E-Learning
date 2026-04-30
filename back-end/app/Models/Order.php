@@ -13,8 +13,6 @@ class Order extends Model
         'user_id',
         'price',
         'status',
-        'stripe_payment_intent_id',
-        'payment_method',
     ];
 
     protected $casts = [

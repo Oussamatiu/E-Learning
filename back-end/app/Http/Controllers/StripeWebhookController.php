@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Stripe\Webhook;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Events\CoursePurchased;
@@ -52,7 +53,7 @@ class StripeWebhookController extends Controller
             return;
         }
 
-        if (Order::where('stripe_payment_intent_id', $paymentIntent->id)->exists()) {
+        if (Payment::where('transaction_id', $paymentIntent->id)->exists()) {
             return;
         }
 
@@ -72,8 +73,16 @@ class StripeWebhookController extends Controller
                 'user_id' => $userId,
                 'price' => $total,
                 'status' => 'completed',
-                'stripe_payment_intent_id' => $paymentIntent->id,
-                'payment_method' => $paymentIntent->payment_method ?? 'card',
+            ]);
+
+            Payment::create([
+                'order_id' => $order->id,
+                'amount' => $total,
+                'provider' => 'stripe',
+                'status' => 'completed',
+                'transaction_id' => $paymentIntent->id,
+                'payment_method' => $paymentIntent->payment_method ?? null,
+                'payment_method_type' => $paymentIntent->payment_method_types[0] ?? 'card',
             ]);
 
             foreach ($courses as $course) {
@@ -88,7 +97,6 @@ class StripeWebhookController extends Controller
                     'course_id' => $course->id,
                 ], [
                     'progress' => 0,
-                    'enrolled_at' => now(),
                 ]);
             }
 

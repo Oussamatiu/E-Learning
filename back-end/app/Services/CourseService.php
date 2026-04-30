@@ -37,6 +37,10 @@ class CourseService
             }
 
             // 2. Create the course
+            $status = $data['status'] ?? 'draft';
+            if ($status === 'published') {
+                $status = 'draft';
+            }
             $course = Course::create([
                 'instructor_id'  => $instructorId,
                 'category_id'    => $data['category_id'],
@@ -44,7 +48,7 @@ class CourseService
                 'description'    => $data['description'] ?? null,
                 'price'          => $data['price'] ?? null,
                 'level'          => $data['level'] ?? null,
-                'status'         => $data['status'] ?? 'draft',
+                'status'         => $status,
                 'thumbnail'      => $thumbnailPath,
                 'duration'       => 0,
                 'students_count' => 0,
@@ -81,6 +85,10 @@ class CourseService
             }
 
             // 2. Create the course
+            $status = $data['status'] ?? 'draft';
+            if ($status === 'published') {
+                $status = 'draft';
+            }
             $course = Course::create([
                 'instructor_id'  => $instructorId,
                 'category_id'    => $data['category_id'],
@@ -88,7 +96,7 @@ class CourseService
                 'description'    => $data['description'] ?? null,
                 'price'          => $data['price'] ?? null,
                 'level'          => $data['level'] ?? null,
-                'status'         => $data['status'] ?? 'draft',
+                'status'         => $status,
                 'thumbnail'      => $thumbnailPath,
                 'duration'       => 0,
                 'students_count' => 0,
@@ -158,13 +166,18 @@ class CourseService
             }
 
             // 2. Update course
+            $status = $data['course']['status'] ?? $course->status ?? 'draft';
+            // Prevent instructors from publishing without admin approval
+            if ($status === 'published' && $course->status !== 'published') {
+                $status = $course->status ?? 'draft';
+            }
             $course->update([
                 'title' => $data['course']['title'],
                 'description' => $data['course']['description'] ?? null,
                 'category_id' => $data['course']['category_id'],
                 'price' => $data['course']['price'] ?? null,
                 'level' => $data['course']['level'] ?? null,
-                'status' => $data['course']['status'] ?? 'draft',
+                'status' => $status,
                 'thumbnail' => $thumbnailPath,
             ]);
 

@@ -19,7 +19,18 @@ const CourseLearning = () => {
   const [progress, setProgress]       = useState(0);
   const [totalLessons, setTotalLessons] = useState(0);
   const [togglingLesson, setTogglingLesson] = useState(null);
-  const [accessDenied, setAccessDenied] = useState(false); 
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setIsAdmin(user.role_id === 3 || user.role?.title === 'admin');
+      } catch {}
+    }
+  }, []); 
 
 
   useEffect(() => {
@@ -30,7 +41,7 @@ const CourseLearning = () => {
         const courseData = await getCourse(id);
         const course = courseData.data || courseData;
 
-        if (course.is_enrolled !== true) {
+        if (course.is_enrolled !== true && !isAdmin) {
           setAccessDenied(true);
           setLoading(false);
           return;
@@ -74,7 +85,7 @@ const CourseLearning = () => {
     if (!id) return;
     const loadProgress = async () => {
       try {
-        const res = await api.get(`api/courses/${id}/progress`);
+        const res = await api.get(`courses/${id}/progress`);
         const data = res.data;
         setCompletedLessons(new Set(data.completed_lessons.map(Number)));
         setProgress(data.progress);
@@ -120,7 +131,7 @@ const CourseLearning = () => {
   }, [sections, selectedLesson]);
 
   const completedCount = completedLessons.size;
-  const progressColor = progress >= 100 ? '#10b981' : '#592b98'; // Emerald green if 100%
+  const progressColor = progress >= 100 ? '#10b981' : '#592b98'; 
 
   if (loading) {
     return (
@@ -131,8 +142,7 @@ const CourseLearning = () => {
     );
   }
 
-  // ── ACCESS DENIED: not enrolled ─────────────────────────────────────────────
-  if (accessDenied) {
+  if (accessDenied && !isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center max-w-md bg-white p-8 rounded-2xl shadow-sm border border-gray-100">

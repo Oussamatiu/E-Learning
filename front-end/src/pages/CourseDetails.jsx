@@ -18,6 +18,17 @@ const CourseDetails = () => {
   const [isBuyingNow, setIsBuyingNow] = useState(false);
   const [cartStatus, setCartStatus] = useState('');
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setIsAdmin(user.role_id === 3 || user.role?.title === 'admin');
+      } catch {}
+    }
+  }, []);
 
   const [comments, setComments] = useState([]);
   const [commentsMeta, setCommentsMeta] = useState({ current_page: 1, last_page: 1 });
@@ -590,6 +601,18 @@ const CourseDetails = () => {
 
                 {/* Purchase / Access Card */}
                 <div className="space-y-3 mb-4">
+                  {isAdmin && (
+                    <Link
+                      to={`/student/course/${course.id}`}
+                      className="w-full flex items-center justify-center gap-2 bg-[#592b98] text-white font-semibold py-3 rounded-md hover:bg-[#3e1f6b] transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Review Course Content
+                    </Link>
+                  )}
                   {isEnrolled ? (
                     /* ── ENROLLED: show Open Course only ── */
                     <Link
