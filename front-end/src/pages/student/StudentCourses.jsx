@@ -5,7 +5,7 @@ import api from '../../services/api';
 const StudentCourses = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, in-progress, completed
+  const [filter, setFilter] = useState('all'); 
 
   useEffect(() => {
     const fetchEnrollments = async () => {

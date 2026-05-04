@@ -1,0 +1,181 @@
+@startuml Use Case Diagram - E-Learning Platform
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor White
+  BorderColor #333
+  FontSize 11
+}
+skinparam rectangle {
+  BorderColor #4a6fa5
+  FontSize 14
+  FontStyle bold
+}
+
+' ========== ACTORS ==========
+actor "Visiteur" as V #lightgray
+actor "Étudiant" as S #lightblue
+actor "Instructeur" as I #lightyellow
+actor "Administrateur" as A #lightcoral
+
+rectangle "Stripe" as Stripe #lightyellow
+
+' ========== INHERITANCE ==========
+V <|-- S
+S <|-- I
+
+' ========== SYSTEM BOUNDARY ==========
+rectangle "Système E-Learning" {
+
+  ' --- Authentication ---
+  package "Authentification" {
+    usecase "S'inscrire" as UC1
+    usecase "Se connecter" as UC2
+    usecase "Vérifier l'email" as UC3
+    usecase "Se déconnecter" as UC10
+    usecase "Modifier profil" as UC11
+  }
+
+  ' --- Navigation ---
+  package "Navigation & Consultation" {
+    usecase "Consulter l'accueil" as UC4
+    usecase "Parcourir les cours" as UC5
+    usecase "Parcourir les catégories" as UC6
+    usecase "Voir détails d'un cours" as UC7
+    usecase "Lire les commentaires" as UC8
+    usecase "Page Devenir Instructeur" as UC9
+  }
+
+  ' --- Achat & Paiement ---
+  package "Achat & Paiement" {
+    usecase "Ajouter au panier" as UC12
+    usecase "Supprimer du panier" as UC13
+    usecase "Passer au checkout" as UC14
+    usecase "Effectuer le paiement" as UC15
+    usecase "Consulter statut paiement" as UC16
+  }
+
+  ' --- Apprentissage ---
+  package "Apprentissage" {
+    usecase "Dashboard étudiant" as UC17
+    usecase "Consulter ses cours" as UC18
+    usecase "Suivre un cours (vidéo)" as UC19
+    usecase "Marquer leçon terminée" as UC20
+    usecase "Suivre progression" as UC21
+    usecase "Commenter un cours" as UC22
+    usecase "Noter un cours" as UC23
+  }
+
+  ' --- Gestion Cours ---
+  package "Gestion des Cours" {
+    usecase "Configurer profil instructeur" as UC24
+    usecase "Dashboard instructeur" as UC25
+    usecase "Créer un cours" as UC26
+    usecase "Ajouter outcomes" as UC27
+    usecase "Créer des sections" as UC28
+    usecase "Ajouter des leçons" as UC29
+    usecase "Modifier un cours" as UC30
+    usecase "Supprimer un cours" as UC34
+    usecase "Uploader miniature" as UC35
+    usecase "Soumettre pour publication" as UC36
+    usecase "Gérer ses cours" as UC37
+  }
+
+  ' --- Finance ---
+  package "Finance" {
+    usecase "Consulter le wallet" as UC38
+    usecase "Consulter gains par cours" as UC39
+    usecase "Consulter gains mensuels" as UC40
+  }
+
+  ' --- Administration ---
+  package "Administration" {
+    usecase "Dashboard admin" as UC41
+    usecase "Gérer tous les cours" as UC42
+    usecase "Approuver un cours" as UC43
+    usecase "Rejeter un cours" as UC44
+    usecase "Supprimer cours (admin)" as UC45
+    usecase "Gérer les utilisateurs" as UC46
+    usecase "Activer/Suspendre utilisateur" as UC47
+    usecase "Consulter les paiements" as UC48
+  }
+
+  ' --- Stripe ---
+  package "Paiement Stripe" {
+    usecase "Traiter le paiement" as UC49
+    usecase "Webhook notification" as UC50
+    usecase "Créer enrollment auto" as UC51
+  }
+}
+
+' ========== VISITOR CONNECTIONS ==========
+V --> UC1
+V --> UC2
+V --> UC4
+V --> UC5
+V --> UC6
+V --> UC7
+V --> UC8
+V --> UC9
+
+' ========== STUDENT CONNECTIONS ==========
+S --> UC10
+S --> UC11
+S --> UC12
+S --> UC13
+S --> UC14
+S --> UC15
+S --> UC16
+S --> UC17
+S --> UC18
+S --> UC19
+S --> UC20
+S --> UC21
+S --> UC22
+S --> UC23
+
+' ========== INSTRUCTOR CONNECTIONS ==========
+I --> UC24
+I --> UC25
+I --> UC26
+I --> UC30
+I --> UC34
+I --> UC35
+I --> UC36
+I --> UC37
+I --> UC38
+I --> UC39
+I --> UC40
+
+' ========== ADMIN CONNECTIONS ==========
+A --> UC41
+A --> UC42
+A --> UC43
+A --> UC44
+A --> UC45
+A --> UC46
+A --> UC47
+A --> UC48
+
+' ========== STRIPE CONNECTIONS ==========
+Stripe --> UC49
+Stripe --> UC50
+
+' ========== INCLUDE RELATIONSHIPS ==========
+UC1 ..> UC3 : <<include>>
+UC14 ..> UC15 : <<include>>
+UC26 ..> UC27 : <<include>>
+UC26 ..> UC28 : <<include>>
+UC28 ..> UC29 : <<include>>
+UC50 ..> UC51 : <<include>>
+
+' ========== EXTEND RELATIONSHIPS ==========
+UC7 <.. UC12 : <<extend>>
+UC7 <.. UC19 : <<extend>>
+UC15 <.. UC49 : <<extend>>
+UC36 <.. UC43 : <<extend>>
+UC36 <.. UC44 : <<extend>>
+
+@enduml

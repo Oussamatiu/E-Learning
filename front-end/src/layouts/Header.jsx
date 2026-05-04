@@ -45,8 +45,9 @@ const Header = () => {
     if (searchQuery.trim()) navigate(`/courses?search=${encodeURIComponent(searchQuery)}`);
   };
 
-  const isAdmin = user?.role_id === 3 || user?.role?.title === 'admin';
-  const isInstructor = user?.role_id === 2 || user?.role?.title === 'instructor';
+  const roleId = Number(user?.role_id);
+  const isAdmin = roleId === 3 || user?.role?.title === 'admin';
+  const isInstructor = roleId === 2 || user?.role?.title === 'instructor';
   const dashboardPath = isAdmin ? '/admin/dashboard' : isInstructor ? '/instructor/dashboard' : '/student/dashboard';
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)

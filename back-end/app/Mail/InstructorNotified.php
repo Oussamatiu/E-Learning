@@ -2,7 +2,6 @@
 
 namespace App\Mail;
 
-use App\Models\Course;
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -14,20 +13,23 @@ class InstructorNotified extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public Course $course;
+    public array $courses;
     public Order  $order;
 
-    public function __construct(Course $course, Order $order)
+    public function __construct(array $courses, Order $order)
     {
-        $this->course = $course;
+        $this->courses = $courses;
         $this->order  = $order;
     }
 
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: '🎉 New Sale: ' . $this->course->title,
-        );
+        $count = count($this->courses);
+        $subject = $count === 1
+            ? '🎉 New Sale: ' . $this->courses[0]->title
+            : "🎉 New Sales: {$count} courses purchased";
+
+        return new Envelope(subject: $subject);
     }
 
     public function content(): Content

@@ -82,23 +82,23 @@ const Courses = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Page Header */}
-      <section className="bg-[#2d2f31] text-white py-12">
+  
+      <section className="bg-[#101829] text-white py-12">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-3xl font-bold mb-2">Courses</h1>
           <p className="text-lg">Broad selection of courses</p>
         </div>
-      </section>
+      </section> 
 
-      {/* Main Content Area */}
+
       <section className="py-8">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col lg:flex-row gap-8">
 
-            {/* Sidebar Filters */}
+       
             <div className="lg:w-64 flex-shrink-0">
               <div className="sticky top-20 space-y-6">
-                {/* Categories */}
+            
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Category</h3>
                   <div className="space-y-2">
@@ -157,16 +157,16 @@ const Courses = () => {
               </div>
             </div>
 
-            {/* Course Grid Area */}
+     
             <div className="flex-1">
-              {/* Toolbar */}
+          
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-200">
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                   <p className="text-gray-900 font-bold whitespace-nowrap">
                     {pagination.total} results
                   </p>
                   
-                  {/* Search Bar */}
+                
                   <div className="relative w-full sm:w-96">
                     <input
                       type="text"
@@ -191,7 +191,7 @@ const Courses = () => {
                 </div>
               </div>
 
-              {/* Course List */}
+           
               {loading ? (
                 <div className="flex justify-center items-center py-20">
                   <div className="w-8 h-8 border-4 border-[#592b98] border-t-transparent rounded-full animate-spin"></div>

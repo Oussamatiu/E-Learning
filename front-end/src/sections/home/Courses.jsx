@@ -87,7 +87,7 @@ export const Courses = () => {
     const loadCourses = async () => {
       setLoading(true);
       try {
-        const params = { per_page: 8 }; // Show 8 courses on home page
+        const params = { per_page: 8 }; 
         if (searchQuery) params.search = searchQuery;
         if (activeFilter !== 'All') params.category = activeFilter;
 

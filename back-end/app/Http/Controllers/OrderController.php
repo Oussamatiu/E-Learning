@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Order;
-use App\Models\OrderItem;
+
 use App\Models\Enrollment;
 use App\Models\Course;
 use Illuminate\Support\Facades\Log;
+use Stripe\Checkout\Session;
+use Stripe\Stripe;
 
 class OrderController extends Controller
 {
@@ -44,9 +45,9 @@ class OrderController extends Controller
         }
 
         try {
-            \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+            Stripe::setApiKey(env('STRIPE_SECRET'));
 
-            $session = \Stripe\Checkout\Session::create([
+            $session = Session::create([
                 'payment_method_types' => ['card'],
                 'mode' => 'payment',
 
@@ -66,12 +67,12 @@ class OrderController extends Controller
                 'success_url' => 'http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => 'http://localhost:5173/cart',
 
-                // metadata للـ session (اختياري)
+               
                 'metadata' => [
                     'user_id' => $user->id,
                 ],
 
-                // هذا هو المهم فعلاً
+             
                 'payment_intent_data' => [
                     'metadata' => [
                         'user_id' => $user->id,
@@ -103,10 +104,10 @@ class OrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Missing session_id'], 400);
             }
 
-            \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
-            $session = \Stripe\Checkout\Session::retrieve($sessionId);
+            Stripe::setApiKey(env('STRIPE_SECRET'));
+            $session = Session::retrieve($sessionId);
 
-            // Verify the session belongs to the authenticated user
+           
             $sessionUserId = $session->metadata->user_id ?? null;
             if ($sessionUserId && (int) $sessionUserId !== $user->id) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);

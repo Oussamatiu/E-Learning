@@ -21,7 +21,7 @@ class StripeWebhookController extends Controller
 
         $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
-
+       
         try {
             $event = Webhook::constructEvent(
                 $payload,
@@ -40,73 +40,88 @@ class StripeWebhookController extends Controller
     }
 
     private function handlePayment($paymentIntent)
-    {
-        $metadata = $paymentIntent->metadata;
+{
+    $metadata = $paymentIntent->metadata;
 
-        $userId = $metadata['user_id'] ?? null;
-        $courseIds = isset($metadata['courses'])
-            ? json_decode($metadata['courses'], true)
-            : null;
+    $userId = $metadata['user_id'] ?? null;
+    $courseIds = isset($metadata['courses'])
+        ? json_decode($metadata['courses'], true)
+        : null;
 
-        if (!$userId || !$courseIds) {
-            Log::error('Missing metadata: ' . $paymentIntent->id);
-            return;
-        }
-
-        if (Payment::where('transaction_id', $paymentIntent->id)->exists()) {
-            return;
-        }
-
-        $courses = Course::whereIn('id', $courseIds)->get();
-
-        if ($courses->isEmpty()) {
-            Log::error('Courses not found');
-            return;
-        }
-
-        DB::beginTransaction();
-
-        try {
-            $total = $courses->sum('price');
-
-            $order = Order::create([
-                'user_id' => $userId,
-                'price' => $total,
-                'status' => 'completed',
-            ]);
-
-            Payment::create([
-                'order_id' => $order->id,
-                'amount' => $total,
-                'provider' => 'stripe',
-                'status' => 'completed',
-                'transaction_id' => $paymentIntent->id,
-                'payment_method' => $paymentIntent->payment_method ?? null,
-                'payment_method_type' => $paymentIntent->payment_method_types[0] ?? 'card',
-            ]);
-
-            foreach ($courses as $course) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'course_id' => $course->id,
-                    'price' => $course->price,
-                ]);
-
-                Enrollment::firstOrCreate([
-                    'user_id' => $userId,
-                    'course_id' => $course->id,
-                ], [
-                    'progress' => 0,
-                ]);
-            }
-
-            DB::commit();
-
-            event(new CoursePurchased($order));
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error($e->getMessage());
-        }
+    if (!$userId || !$courseIds) {
+        Log::error('Missing metadata: ' . $paymentIntent->id);
+        return;
     }
+
+  
+    $alreadyProcessed = DB::table('payments')
+        ->where('transaction_id', $paymentIntent->id)
+        ->lockForUpdate()
+        ->exists();
+
+    if ($alreadyProcessed) {
+        Log::info('Webhook already processed: ' . $paymentIntent->id);
+        return;
+    }
+
+    $courses = Course::whereIn('id', $courseIds)->get();
+
+    if ($courses->isEmpty()) {
+        Log::error('Courses not found');
+        return;
+    }
+
+    DB::beginTransaction();
+
+    try {
+        if (Payment::where('transaction_id', $paymentIntent->id)->exists()) {
+            DB::rollBack();
+            return;
+        }
+
+        $total = $courses->sum('price');
+
+        $order = Order::create([
+            'user_id' => $userId,
+            'price' => $total,
+            'status' => 'completed',
+            'stripe_payment_intent_id' => $paymentIntent->id,
+            'payment_method' => $paymentIntent->payment_method ?? null,
+            'payment_method_type' => $paymentIntent->payment_method_types[0] ?? 'card',
+        ]);
+
+        Payment::create([
+            'order_id' => $order->id,
+            'amount' => $total,
+            'provider' => 'stripe',
+            'status' => 'completed',
+            'transaction_id' => $paymentIntent->id,
+        ]);
+
+        foreach ($courses as $course) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'course_id' => $course->id,
+                'price' => $course->price,
+            ]);
+
+            Enrollment::firstOrCreate([
+                'user_id' => $userId,
+                'course_id' => $course->id,
+            ], [
+                'progress' => 0,
+            ]);
+        }
+
+        DB::commit();
+
+        event(new CoursePurchased($order->load([
+            'orderItems.course.instructor'
+        ])));
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Webhook failed: ' . $e->getMessage());
+    }
+}
 }

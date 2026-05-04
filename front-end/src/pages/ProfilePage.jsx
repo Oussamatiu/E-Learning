@@ -26,7 +26,7 @@ const ProfilePage = () => {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [hasProfile, setHasProfile] = useState(false);
 
-  const isInstructor = user.role_id === 2 || user.role?.title === 'instructor';
+  const isInstructor = Number(user.role_id) === 2 || user.role?.title === 'instructor';
   const initials = user.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';

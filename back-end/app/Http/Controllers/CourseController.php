@@ -21,7 +21,7 @@ class CourseController extends Controller
     {
         try {
             $query = Course::with('instructor', 'category')
-                ->where('status', 'published'); // Only show published courses publicly
+                ->where('status', 'published'); 
 
             if ($request->has('search')) {
                 $search = $request->search;
@@ -131,12 +131,11 @@ class CourseController extends Controller
 
         $validated = $request->validated();
 
-        // Merge uploaded files with validated data
+ 
         if ($request->hasFile('thumbnail_file')) {
             $validated['thumbnail_file'] = $request->file('thumbnail_file');
         }
 
-        // Merge lesson video files
         if (isset($validated['sections']) && is_array($validated['sections'])) {
             foreach ($validated['sections'] as $sIndex => $section) {
                 if (isset($section['lessons']) && is_array($section['lessons'])) {
@@ -154,7 +153,7 @@ class CourseController extends Controller
             throw new \Exception('INSTRUCTOR_NOT_FOUND');
         }
 
-        // Use the CourseService to create everything in one transaction
+       
         $courseService = app(\App\Services\CourseService::class);
         $course = $courseService->createFullCourse($validated, $user->instructor->id);
 
@@ -254,7 +253,7 @@ class CourseController extends Controller
                 'thumbnail_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
             ]);
 
-            // Handle thumbnail upload
+    
             if ($request->hasFile('thumbnail_file')) {
                 $fileService = app(\App\Services\FileService::class);
                 if ($course->thumbnail) {
@@ -263,7 +262,7 @@ class CourseController extends Controller
                 $course->thumbnail = $fileService->upload($request->file('thumbnail_file'), 'thumbnails', 'public');
             }
 
-            // Instructors cannot publish directly — only admins can approve
+         
             $fields = $request->only(['title', 'description', 'price', 'level', 'status', 'category_id', 'duration', 'students_count', 'rating']);
             if (isset($fields['status']) && $fields['status'] === 'published' && $course->status !== 'published') {
                 unset($fields['status']);

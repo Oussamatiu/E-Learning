@@ -10,7 +10,8 @@ const Sidebar = () => {
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'US';
 
-  const isInstructor = user.role_id === 3 || user.role === 'instructor' || user.role?.title === 'instructor';
+  const roleId = Number(user.role_id);
+  const isInstructor = roleId === 2 || user.role === 'instructor' || user.role?.title === 'instructor';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -72,7 +73,7 @@ const Sidebar = () => {
           </>
         )}
 
-        {/* Student section */}
+        
         <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mb-2">My Learning</p>
 
         <NavLink to="/student/dashboard" className={navLinkClass}>

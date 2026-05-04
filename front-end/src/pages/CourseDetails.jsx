@@ -25,7 +25,7 @@ const CourseDetails = () => {
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setIsAdmin(user.role_id === 3 || user.role?.title === 'admin');
+        setIsAdmin(Number(user.role_id) === 3 || user.role?.title === 'admin');
       } catch {}
     }
   }, []);
@@ -179,8 +179,8 @@ const CourseDetails = () => {
     }
   };
 
-  // Buy now handler
-  const handleBuyNow = async () => {
+  // Buy now handler — add to cart then go to cart page
+  const handleBuyNow = () => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
@@ -188,24 +188,8 @@ const CourseDetails = () => {
     }
 
     setIsBuyingNow(true);
-    try {
-      const response = await api.post('/orders/buy-now', {
-        course_id: course.id
-      });
-
-      if (response.data.success) {
-        navigate(`/checkout/${response.data.order.id}`);
-      }
-    } catch (error) {
-      console.error('Error buying course:', error);
-      if (error.response?.status === 422) {
-        alert('You are already enrolled in this course!');
-      } else {
-        alert('Error processing your order. Please try again.');
-      }
-    } finally {
-      setIsBuyingNow(false);
-    }
+    addToCart(course);
+    navigate('/cart');
   };
 
   // Format price

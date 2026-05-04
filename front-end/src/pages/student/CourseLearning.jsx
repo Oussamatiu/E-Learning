@@ -27,7 +27,7 @@ const CourseLearning = () => {
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setIsAdmin(user.role_id === 3 || user.role?.title === 'admin');
+        setIsAdmin(Number(user.role_id) === 3 || user.role?.title === 'admin');
       } catch {}
     }
   }, []); 

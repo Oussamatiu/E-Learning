@@ -20,13 +20,13 @@ class WalletController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // Get or initialize wallet
+      
         $wallet = Wallet::firstOrCreate(
             ['user_id' => $user->id],
             ['balance' => 0]
         );
 
-        // All credit transactions for this instructor
+      
         $transactions = WalletTransaction::where('user_id', $user->id)
             ->where('type', 'credit')
             ->with('order.orderItems.course:id,title,thumbnail')
@@ -36,14 +36,14 @@ class WalletController extends Controller
         $totalEarnings = $wallet->balance;
         $totalSales    = $transactions->count();
 
-        // Per-course breakdown from transactions
+       
         $byCourse = $transactions
             ->flatMap(fn($tx) => $tx->order?->orderItems ?? collect())
             ->filter(fn($item) => $item->course)
             ->groupBy('course_id')
             ->map(function ($group) {
                 $course = $group->first()->course;
-                // 70% of sum of prices in that group
+              
                 $earnings = round($group->sum('price') * 0.70, 2);
                 return [
                     'id'        => $course->id,
@@ -57,7 +57,7 @@ class WalletController extends Controller
             })
             ->values();
 
-        // Monthly breakdown from transactions (last 6 months)
+     
         $monthly = $transactions
             ->groupBy(fn($tx) => $tx->created_at->format('Y-m'))
             ->map(fn($group, $month) => [
@@ -69,7 +69,7 @@ class WalletController extends Controller
             ->values()
             ->take(-6);
 
-        // Recent transaction history (last 10)
+ 
         $history = $transactions->take(10)->map(fn($tx) => [
             'id'          => $tx->id,
             'amount'      => $tx->amount,

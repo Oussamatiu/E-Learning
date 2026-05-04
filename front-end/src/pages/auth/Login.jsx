@@ -26,11 +26,12 @@ const Login = () => {
         localStorage.setItem('token', data.token);
       }
 
+      const roleId = Number(data.user?.role_id);
       const isInstructor =
-        data.user?.role_id === 2 ||
+        roleId === 2 ||
         data.user?.role?.title === 'instructor';
       const isAdmin =
-        data.user?.role_id === 3 ||
+        roleId === 3 ||
         data.user?.role?.title === 'admin';
 
       if (isAdmin) {

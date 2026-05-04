@@ -16,7 +16,7 @@ const AdminDashboard = () => {
   const [success, setSuccess] = useState('');
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isAdmin = user.role_id === 3 || user.role?.title === 'admin';
+  const isAdmin = Number(user.role_id) === 3 || user.role?.title === 'admin';
 
   useEffect(() => {
     if (!isAdmin) {

@@ -12,8 +12,9 @@ const isAuthenticated = () => !!localStorage.getItem('token');
 
 const getRole = () => {
   const user = getUser();
-  if (user.role_id === 3 || user.role?.title === 'admin') return 'admin';
-  if (user.role_id === 2 || user.role?.title === 'instructor') return 'instructor';
+  const roleId = Number(user.role_id);
+  if (roleId === 3 || user.role?.title === 'admin') return 'admin';
+  if (roleId === 2 || user.role?.title === 'instructor') return 'instructor';
   return 'student';
 };
 

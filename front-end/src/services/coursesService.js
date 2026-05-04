@@ -35,7 +35,6 @@ export const getCategories = () => apiClient.get('/categories')
 
 export const enrollInCourse = (courseId) => apiClient.post(`/courses/${courseId}/enroll`);
 
-// Course Outcomes API
 export const createCourseOutcome = (courseId, outcomeData) => apiClient.post(`/courses/${courseId}/outcomes`, outcomeData);
 
 export const updateCourseOutcome = (courseId, outcomeId, outcomeData) => apiClient.put(`/courses/${courseId}/outcomes/${outcomeId}`, outcomeData);
